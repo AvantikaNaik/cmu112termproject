@@ -1,0 +1,55 @@
+Welcome to the project proposal for my (avantikn) 112 term project! 
+
+Name and Description: Phasmophobia112
+
+You're a player who just happened to get lost in a maze. How ever shall you get
+out? All you know is that there is a key hidden in the maze somewhere. Find 
+the key, and you find your way out. But it's not that easy. While you're trying 
+to run, there is a super scary ghost tracking you! If you find clues about the 
+ghost as you make your way around the maze, you get power ups that can help you
+escape faster. But take too long and you'll meet your demise. Can you survive? 
+
+FIND OUT NOW BY PLAYING PHASMO112! 
+
+Analysis: 
+
+This project is modeled off the game Phasmophobia, a multiplayer ghost hunting, 
+audio game where you can talk to ghosts to find out what type they are. It also 
+has pacman vibes because of the maze. My game is very similar in idea to Phasmo
+because you have to find clues about the ghost, which is trying to kill you. 
+My game is slightly different because rather than being a first-perosn 3-d game,
+your player is in a maze and you're viewing him from above. That is where the 
+Pacman similarity shows up. It is different than Pacman since there is only 1 
+ghost, and you're not trying to eat all the pellets or something, you're just 
+trying to escape. 
+
+Structural Plan: 
+Currently, the plan is to have all the code (except 112 graphics) in 1 file, 
+and another folder for images. If this get's really complicated, then I might
+create a seperate file for helper functions which are currently being seperated 
+by comment blocks
+
+Algo Plan: 
+There are a few main areas for algorithmic complexity
+1. Ghost tracking - I am planning on using A Star (A *) pathfinding to help the
+ghost track the player. 
+2. Maze generation - I am also using recursive backtracking to make a smart maze
+3. Audio - To analyze the audio, I will be using fast fourier transformations to 
+recognize certain key noises that correspond to certain words. 
+4. Textbox stuff - I will be using my own algo (in key pressed) to create a 
+journal that can remember entries 
+
+Timeline Plan:
+By TP1, I want to have the ghost tracking done, with a playable game or sorts. 
+Between TP1 and TP2, I want to hit MVP so I have some time to try the audio part
+without using a module. 
+
+Version Control: 
+Github! I have a repo for all my code and images!! The image for this will be
+in this folder
+
+Modules: 
+cmu112graphics? 
+
+StoryBoard: 
+attached seperatly in the folder! 
