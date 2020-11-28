@@ -8,6 +8,7 @@ from cmu_112_graphics import *
 import random
 import time
 from dataclasses import make_dataclass
+from random import shuffle, randrange
 
 #######################################################
 # 15-112 Functions
@@ -57,21 +58,27 @@ def make2dList(rows, cols):
 # For idea on how to make the maze - Prim's Algo
 # https://www.cs.cmu.edu/~112/notes/notes-recursion-part2.html#mazeSolving
 # Used this to reverse engineer the maze as well
-def makeMaze(app, width, height):
-    visitedBlocks = [[False] * width + [True] for i in range(height)] + [[1] * (width +1)]
-    print(visitedBlocks)
 
-def backtrackThrough(app, row, col, grid):
-    visitedBlocks[row][col] = True
-    directions = [(row + 1, col), (row - 1,col), (row, col -1), (row, col + 1)]
-    random.shuffle(directions)
-    for (newRow, newCol) in directions:
-        if not visitedBlocks[newRow][newCol]:
-            if newRow == row:
-                app.gridCells[max(newCol, col)][row].topLine = False
-                app.gridCells[min(newCol, col)][row].topLine = False
-            if newCol == col:
-                
+def makeMaze(app, width, height):
+    visitedBlocks = [[False] * width + [True] for _ in range(height)] + [[1] * (width +1)]
+
+    def backtrackThrough(app, row, col):
+        visitedBlocks[col][row] = True
+        directions = [(row + 1, col), (row - 1,col), (row, col -1), (row, col + 1)]
+        random.shuffle(directions)
+        for (newRow, newCol) in directions:
+            if not visitedBlocks[newCol][newRow]:
+                if newRow == row:
+                    app.gridBlocks[max(newCol, col)][row].topLine = False
+                    app.gridBlocks[min(newCol, col)][row].bottomLine = False
+                if newCol == col:
+                    app.gridBlocks[col][max(newRow, row)].leftLine = False
+                    app.gridBlocks[col][min(newRow, row)].rightLine = False
+                backtrackThrough(app, newRow, newCol)
+
+    row = random.randint(0, app.rows - 1) 
+    col = random.randint(0, app.cols - 1)
+    backtrackThrough(app,row ,col)
 
 def spawnKey(app):
     row = random.randint(0,app.rows-1)
@@ -108,6 +115,8 @@ def appStarted(app):
             
     app.playerX = app.margin * 2
     app.playerY = app.margin * 2
+    app.ghostX  = app.width - app.margin * 2
+    app.ghostY  = app.height - app.margin * 2
 
     app.keyLocation = (0, 0)
     spawnKey(app)
@@ -183,7 +192,10 @@ def drawKey(app, canvas):
     canvas.create_oval(x0, y0, x1, y1, fill="yellow")
 
 def drawPlayer(app, canvas):
-    canvas.create_oval(app.playerX - 10, app.playerY - 10, app.playerX + 10, app.playerY + 10, fill="yellow")
+    canvas.create_oval(app.playerX - 10, app.playerY - 10, app.playerX + 10, app.playerY + 10, fill="blue")
+
+def drawGhost(app, canvas):
+    canvas.create_oval(app.ghostX - 10, app.ghostY - 10, app.ghostX + 10, app.ghostY + 10, fill="red")
 
 def redrawAll(app, canvas):
     canvas.create_rectangle(0, 0, app.height, app.width, fill = "red")
@@ -202,6 +214,7 @@ def redrawAll(app, canvas):
                 canvas.create_line(x0, y1, x1, y1, width = 3, fill="white")
     drawKey(app, canvas)
     drawPlayer(app, canvas)
+    drawGhost(app, canvas)
     if app.journalVisible:
         drawJournalScreen(app, canvas)
     if app.journalEntry:
