@@ -217,6 +217,7 @@ def appStarted(app):
     app.ghostY  = app.height - app.margin * 2
 
     app.titleScreen = True
+    app.helpScreen = False
     app.t0 = 0
 
     app.keyLocation = (0, 0)
@@ -281,26 +282,29 @@ def isLegal(app, oldRow, oldCol, newRow, newCol):
 def keyPressed(app, event):
     if app.titleScreen:
         return 
-    if event.key == "r":
-        appStarted(app)
-    app.playerSpeed = 5
-    oldRow, oldCol = getCell(app, app.playerX, app.playerY)
-    if event.key == "Up" or event.key == "w":
-        app.playerY -= app.playerSpeed
-        if not playerLegal(app, oldRow, oldCol):
-            app.playerY += app.playerSpeed
-    elif event.key == "Down" or event.key == "s":
-        app.playerY += app.playerSpeed
-        if not playerLegal(app, oldRow, oldCol):
+    if not app.journalVisible:
+        if event.key == "r":
+            appStarted(app)
+        if event.key == "h":
+            app.helpScreen = not app.helpScreen
+        app.playerSpeed = 5
+        oldRow, oldCol = getCell(app, app.playerX, app.playerY)
+        if event.key == "Up" or event.key == "w":
             app.playerY -= app.playerSpeed
-    elif event.key == "Left" or event.key == "a":
-        app.playerX -= app.playerSpeed
-        if not playerLegal(app, oldRow, oldCol):
-            app.playerX += app.playerSpeed
-    elif event.key == "Right" or event.key == "d":
-        app.playerX += app.playerSpeed
-        if not playerLegal(app, oldRow, oldCol):
+            if not playerLegal(app, oldRow, oldCol):
+                app.playerY += app.playerSpeed
+        elif event.key == "Down" or event.key == "s":
+            app.playerY += app.playerSpeed
+            if not playerLegal(app, oldRow, oldCol):
+                app.playerY -= app.playerSpeed
+        elif event.key == "Left" or event.key == "a":
             app.playerX -= app.playerSpeed
+            if not playerLegal(app, oldRow, oldCol):
+                app.playerX += app.playerSpeed
+        elif event.key == "Right" or event.key == "d":
+            app.playerX += app.playerSpeed
+            if not playerLegal(app, oldRow, oldCol):
+                app.playerX -= app.playerSpeed
 
     if event.key == "j" and not app.journalEntry:
         app.journalVisible = not app.journalVisible
@@ -371,6 +375,16 @@ def drawTitleGhost(app, canvas, x, y):
     canvas.create_oval(x-40, y+10, x-20, y-10, fill="black")
     canvas.create_oval(x+20, y+10, x+40, y-10, fill="black")
 
+def drawHelpScreen(app, canvas):
+    canvas.create_rectangle(0, 0, app.height, app.width, fill = "black")
+    canvas.create_text(app.width//2, app.height//8, text="Goal:Find the key", fill="red", font="Gothic 40 bold")
+    canvas.create_text(app.width//2, 2 * app.height//8, text="Once you find the key, the bottom right corner (door) opens.", fill="red", font="Gothic 15")
+    canvas.create_text(app.width//2, 3 * app.height//8, text="As you try to escape, a ghost is trying to find you.", fill="red", font="Gothic 15")
+    canvas.create_text(app.width//2, 4 * app.height//8, text="If it gets you, it's game over. Press r to reset if that happens.", fill="red", font="Gothic 15")
+    canvas.create_text(app.width//2, 5 * app.height//8, text="While traversing the maze, you might come across clues.", fill="red", font="Gothic 15")
+    canvas.create_text(app.width//2, 6 * app.height//8, text="Record the clues in your journal to get bonus points and powerups.", fill="red", font="Gothic 15")
+    canvas.create_text(app.width//2, 7 * app.height//8, text="If you shout for help, you might get a clue.", fill="red", font="Gothic 15")
+
 def redrawAll(app, canvas):
     canvas.create_rectangle(0, 0, app.height, app.width, fill = "red")
     for row in range(app.rows):
@@ -391,6 +405,8 @@ def redrawAll(app, canvas):
     drawGhost(app, canvas)
     if app.titleScreen:
         drawTitle(app, canvas)
+    if app.helpScreen:
+        drawHelpScreen(app, canvas)
     if app.journalVisible:
         drawJournalScreen(app, canvas)
         drawTextBoxText(app, canvas)
