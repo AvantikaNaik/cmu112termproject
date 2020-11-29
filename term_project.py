@@ -193,8 +193,11 @@ def appStarted(app):
     app.journalVisible = False
     app.journalEntry = False
 
-    app.clues = []
-    app.text1= "Start typing..."
+    app.text0=["Click to start typing...", app.width//2, app.height//4]
+    app.text1= ["Click to start typing...", app.width//2, app.height//2]
+    app.text2= ["Click to start typing...", app.width//2, 3 * app.height//4]
+    app.journal = [app.text0, app.text1 ,app.text2]
+    app.currentText = 0
 
     app.rows = 5
     app.cols = 5
@@ -268,11 +271,10 @@ def isLegal(app, oldRow, oldCol, newRow, newCol):
     if newCol < oldCol and app.gridBlocks[newRow][newCol].rightLine == False:
         return True
     return False
-        
-
+                      
 def keyPressed(app, event):
-    if event.key == "u":
-        moveGhost(app)
+    #if event.key == "u":
+    #    moveGhost(app)
     app.playerSpeed = 5
     oldRow, oldCol = getCell(app, app.playerX, app.playerY)
     if event.key == "Up" or event.key == "w":
@@ -295,37 +297,43 @@ def keyPressed(app, event):
     if event.key == "j" and not app.journalEntry:
         app.journalVisible = not app.journalVisible
     if app.journalEntry:
-        if app.text1 == "Start typing...":
-            app.text1 = ""
+        if (app.journal[app.currentText])[0] == "Click to start typing...":
+            (app.journal[app.currentText])[0] = ""
         if event.key == "Enter":
             app.journalEntry = not app.journalEntry
         if event.key == "Backspace":
-            endVal = len(app.text1)
+            endVal = len((app.journal[app.currentText])[0])
             if endVal != 0:
-                app.text1 = app.text1[:endVal-1]
+                (app.journal[app.currentText])[0] = ((app.journal[app.currentText])[0])[:endVal-1]
             else:
-                app.text1 = ""
+                (app.journal[app.currentText])[0] = ""
         elif event.key == "Space":
-            app.text1 += " "
-        elif event.key in ["Up", "Down", "Left","Right"]:
-            app.text1 += "" 
-        else:
-            app.text1 += event.key
+            (app.journal[app.currentText])[0] += " "
+        elif event.key in {"Up", "Down", "Left","Right"}:
+            (app.journal[app.currentText])[0] += "" 
+        elif event.key not in {"Backspace", "Enter"}:
+            (app.journal[app.currentText])[0] += event.key
 
 
 def mousePressed(app, event):
-    if (app.journalVisible and (app.width//4) < event.x <= (3 * app.width//4) \
-        and 10 < event.y < 50):
-        print("enteredjournalmode")
-        app.journalEntry = True
+    if app.journalVisible:
+        for i in range(len(app.journal)):
+            (text, textX, textY) = app.journal[i]
+            horizontal = 3 * len(text)
+            if abs(textX - event.x) <= horizontal and abs(textY - event.y) <= 30:
+                app.currentText = i
+                app.journalEntry = True
+            else: app.currentText
+        print(app.currentText)
 
 def drawTextBoxText(app, canvas):
-    canvas.create_text(app.width//2, app.height//2, text = app.text1)
+    for (text, x, y) in app.journal:
+        canvas.create_text(x, y, text=text)
 
 def drawJournalScreen(app, canvas):
     canvas.create_rectangle(0, 0, app.width, app.height, fill = "brown")
     canvas.create_rectangle(app.width//4, 10, 3 * app.width//4, 50, fill = "yellow")
-    canvas.create_text(app.width//2, 30, text="Add new journal entry") 
+    canvas.create_text(app.width//2, 30, text="My Journal Entries") 
 
 def drawKey(app, canvas):
     (x0, y0, x1, y1) = getCellBounds(app,app.keyLocation[0], app.keyLocation[1])
@@ -357,7 +365,6 @@ def redrawAll(app, canvas):
     drawGhost(app, canvas)
     if app.journalVisible:
         drawJournalScreen(app, canvas)
-    if app.journalEntry:
         drawTextBoxText(app, canvas)
 
 
