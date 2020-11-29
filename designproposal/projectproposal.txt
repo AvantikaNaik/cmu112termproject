@@ -32,10 +32,20 @@ by comment blocks
 Algo Plan: 
 There are a few main areas for algorithmic complexity
 1. Ghost tracking - I am planning on using A Star (A *) pathfinding to help the
-ghost track the player. 
+ghost track the player. After struggling with A* for a while, I realized through
+experimenting that the ghost has to be able to go through diagonally because if 
+i remove that option then the efficiency goes down SO MUCH that it's almost
+an inifite loop :(
+
 2. Maze generation - I am also using recursive backtracking to make a smart maze
+Basically, I create a grid of blocks which have 4 sides to them. Then, I 
+randomly go through the maze and remove a side (and that side's adjacent side).
+I keep track of where I've been in a visitedBlocks list so that the maze doesn't
+fully become wall-less. 
+
 3. Audio - To analyze the audio, I will be using fast fourier transformations to 
 recognize certain key noises that correspond to certain words. 
+
 4. Textbox stuff - I will be using my own algo (in key pressed) to create a 
 journal that can remember entries 
 
