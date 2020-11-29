@@ -10,6 +10,7 @@ import time
 from dataclasses import make_dataclass
 from random import shuffle, randrange
 
+
 #######################################################
 # 15-112 Functions
 #######################################################
@@ -199,8 +200,8 @@ def appStarted(app):
     app.journal = [app.text0, app.text1 ,app.text2]
     app.currentText = 0
 
-    app.rows = 5
-    app.cols = 5
+    app.rows = 10
+    app.cols = 10
     app.margin = 20
 
     app.gridBlocks = make2dList(app.rows, app.cols)
@@ -215,13 +216,18 @@ def appStarted(app):
     app.ghostX  = app.width - app.margin * 2
     app.ghostY  = app.height - app.margin * 2
 
+    app.titleScreen = True
+    app.t0 = 0
+
     app.keyLocation = (0, 0)
-    #spawnKey(app)
+    spawnKey(app)
     makeMaze(app, app.rows, app.cols)
 
 def timerFired(app):
     #ghostMove(app)
-    pass
+    app.t0 += 1
+    if app.t0 > 30:
+        app.titleScreen = False
 
 def playerLegal(app, oldRow, oldCol):
     newRow, newCol = getCell(app, app.playerX, app.playerY)
@@ -345,6 +351,24 @@ def drawPlayer(app, canvas):
 def drawGhost(app, canvas):
     canvas.create_oval(app.ghostX - 10, app.ghostY - 10, app.ghostX + 10, app.ghostY + 10, fill="red")
 
+def drawTitle(app, canvas):
+    canvas.create_rectangle(0, 0, app.height, app.width, fill = "black")
+    canvas.create_text(app.width//2, app.height//4, text="Phasmophobia112", fill="red", font="Gothic 60 bold")
+    canvas.create_text(app.width//2, 2 * app.height//5, text="press r to reset", fill="red", font="Gothic 40 bold")
+    canvas.create_text(app.width//2, 3 * app.height//5, text="press h for help", fill="red", font="Gothic 40 bold")
+    canvas.create_text(app.width//2, 4 * app.height//5, text="Will you make it out alive?", fill="red", font="Gothic 40 bold")
+    drawTitleGhost(app, canvas, 100, 400)
+    drawTitleGhost(app, canvas, app.width - 100, 400)
+
+def drawTitleGhost(app, canvas, x, y):
+    canvas.create_oval(x - 60, y - 60, x + 60, y + 60, fill="red")
+    canvas.create_rectangle(x - 60, y, x + 60, y + 100, fill="red", width=0)
+    canvas.create_polygon(x-20, y + 100, x, y + 140, x + 20, y + 100, fill="red", width=0 )
+    canvas.create_polygon(x-60, y + 100, x-50, y + 140, x - 20, y + 100, fill="red", width=0 )
+    canvas.create_polygon(x+20, y + 100, x+50, y + 140, x + 60, y + 100, fill="red", width=0 )
+    canvas.create_oval(x-40, y+10, x-20, y-10, fill="black")
+    canvas.create_oval(x+20, y+10, x+40, y-10, fill="black")
+
 def redrawAll(app, canvas):
     canvas.create_rectangle(0, 0, app.height, app.width, fill = "red")
     for row in range(app.rows):
@@ -363,6 +387,8 @@ def redrawAll(app, canvas):
     drawKey(app, canvas)
     drawPlayer(app, canvas)
     drawGhost(app, canvas)
+    if app.titleScreen:
+        drawTitle(app, canvas)
     if app.journalVisible:
         drawJournalScreen(app, canvas)
         drawTextBoxText(app, canvas)
