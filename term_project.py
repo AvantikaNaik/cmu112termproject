@@ -279,8 +279,10 @@ def isLegal(app, oldRow, oldCol, newRow, newCol):
     return False
                       
 def keyPressed(app, event):
-    #if event.key == "u":
-    #    moveGhost(app)
+    if app.titleScreen:
+        return 
+    if event.key == "r":
+        appStarted(app)
     app.playerSpeed = 5
     oldRow, oldCol = getCell(app, app.playerX, app.playerY)
     if event.key == "Up" or event.key == "w":
