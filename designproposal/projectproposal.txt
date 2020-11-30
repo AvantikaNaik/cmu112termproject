@@ -18,7 +18,8 @@ audio game where you can talk to ghosts to find out what type they are. It also
 has pacman vibes because of the maze. My game is very similar in idea to Phasmo
 because you have to find clues about the ghost, which is trying to kill you. 
 My game is slightly different because rather than being a first-perosn 3-d game,
-your player is in a maze and you're viewing him from above. That is where the 
+your player is in a maze and you're viewing him from above. Also my game is
+single-player, and the audio won't be a main focus in mine. The maze is where the 
 Pacman similarity shows up. It is different than Pacman since there is only 1 
 ghost, and you're not trying to eat all the pellets or something, you're just 
 trying to escape. 
@@ -47,10 +48,11 @@ fully become wall-less.
 recognize certain key noises that correspond to certain words. 
 
 4. Textbox stuff - I will be using my own algo (in key pressed) to create a 
-journal that can remember entries 
+journal that can remember entries. Current it's done through lists and keeping 
+track of the info in a tuple in the list. 
 
 Timeline Plan:
-By TP1, I want to have the ghost tracking done, with a playable game or sorts. 
+By TP1, I want to have the ghost tracking algo, with a playable game of sorts. 
 Between TP1 and TP2, I want to hit MVP so I have some time to try the audio part
 without using a module. 
 
