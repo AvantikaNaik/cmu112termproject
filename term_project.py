@@ -223,6 +223,10 @@ def appStarted(app):
     app.bonus = ["crucifix", "battery", "snack"]
     chooseBonus(app)
 
+    app.clues = ["handprint", "ectoplasm", "freezing temps", "blood splatter",\
+                "writing", "water"]
+    chooseClues(app)
+
     app.keyLocation = (0, 0)
     spawnKey(app)
     makeMaze(app, app.rows, app.cols)
@@ -240,6 +244,13 @@ def chooseBonus(app):
     bonusRow = random.randint(0, app.rows -1)
     bonusCol = random.randint(0, app.cols -1)
     app.bonusItem = (item, bonusRow, bonusCol)
+
+def chooseClues(app):
+    (clue0, clue1, clue2) = tuple(random.sample(app.clues,3))
+    app.firstClue = (clue0, random.randint(0, app.rows-1), random.randint(0, app.cols -1))
+    app.secondClue = (clue1, random.randint(0, app.rows-1), random.randint(0, app.cols -1))
+    app.thirdClue = (clue2, random.randint(0, app.rows-1), random.randint(0, app.cols -1))
+
 
 def playerLegal(app, oldRow, oldCol):
     newRow, newCol = getCell(app, app.playerX, app.playerY)
@@ -402,6 +413,12 @@ def drawBonus(app, canvas):
     canvas.create_oval(x0 +20, y0+20, x1-20, y1-20, fill="pink")
     canvas.create_text((x0 + x1) // 2, (y0 + y1)//2, text=item, fill="black")
 
+def drawClues(app, canvas):
+    for (clue, row, col) in [app.firstClue, app.secondClue, app.thirdClue]:
+        (x0, y0, x1, y1) = getCellBounds(app, row, col)
+        canvas.create_oval(x0 +15, y0+15, x1-15, y1-15, fill="lime")
+        canvas.create_text((x0 + x1) // 2, (y0 + y1)//2, text=clue, fill="black")
+
 def redrawAll(app, canvas):
     canvas.create_rectangle(0, 0, app.height, app.width, fill = "red")
     for row in range(app.rows):
@@ -421,6 +438,7 @@ def redrawAll(app, canvas):
     drawPlayer(app, canvas)
     drawGhost(app, canvas)
     drawBonus(app, canvas)
+    drawClues(app, canvas)
     if app.titleScreen:
         drawTitle(app, canvas)
     if app.helpScreen:
