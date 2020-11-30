@@ -220,6 +220,9 @@ def appStarted(app):
     app.helpScreen = False
     app.t0 = 0
 
+    app.bonus = ["crucifix", "battery", "snack"]
+    chooseBonus(app)
+
     app.keyLocation = (0, 0)
     spawnKey(app)
     makeMaze(app, app.rows, app.cols)
@@ -229,6 +232,14 @@ def timerFired(app):
     app.t0 += 1
     if app.t0 > 30:
         app.titleScreen = False
+
+def chooseBonus(app):
+    bonusNum = random.randint(0, len(app.bonus) - 1)
+    print(bonusNum)
+    item = app.bonus[bonusNum]
+    bonusRow = random.randint(0, app.rows -1)
+    bonusCol = random.randint(0, app.cols -1)
+    app.bonusItem = (item, bonusRow, bonusCol)
 
 def playerLegal(app, oldRow, oldCol):
     newRow, newCol = getCell(app, app.playerX, app.playerY)
@@ -349,7 +360,7 @@ def drawJournalScreen(app, canvas):
 
 def drawKey(app, canvas):
     (x0, y0, x1, y1) = getCellBounds(app,app.keyLocation[0], app.keyLocation[1])
-    canvas.create_oval(x0, y0, x1, y1, fill="yellow")
+    canvas.create_oval(x0 + 10, y0+ 10, x1-10, y1-10, fill="yellow")
 
 def drawPlayer(app, canvas):
     canvas.create_oval(app.playerX - 10, app.playerY - 10, app.playerX + 10, app.playerY + 10, fill="blue")
@@ -385,6 +396,12 @@ def drawHelpScreen(app, canvas):
     canvas.create_text(app.width//2, 6 * app.height//8, text="Record the clues in your journal to get bonus points and powerups.", fill="red", font="Gothic 15")
     canvas.create_text(app.width//2, 7 * app.height//8, text="If you shout for help, you might get a clue.", fill="red", font="Gothic 15")
 
+def drawBonus(app, canvas):
+    (item, row, col) = app.bonusItem
+    (x0, y0, x1, y1) = getCellBounds(app, row, col)
+    canvas.create_oval(x0 +20, y0+20, x1-20, y1-20, fill="pink")
+    canvas.create_text((x0 + x1) // 2, (y0 + y1)//2, text=item, fill="black")
+
 def redrawAll(app, canvas):
     canvas.create_rectangle(0, 0, app.height, app.width, fill = "red")
     for row in range(app.rows):
@@ -403,6 +420,7 @@ def redrawAll(app, canvas):
     drawKey(app, canvas)
     drawPlayer(app, canvas)
     drawGhost(app, canvas)
+    drawBonus(app, canvas)
     if app.titleScreen:
         drawTitle(app, canvas)
     if app.helpScreen:
