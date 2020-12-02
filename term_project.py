@@ -93,7 +93,7 @@ def astar(app, startval, endval):
     end = Node(None, endval)
     
     openList = []
-    closedList = []
+    closedList = set()
 
     openList.append(start)
 
@@ -107,7 +107,7 @@ def astar(app, startval, endval):
                 bestNode = i
 
         openList.pop(bestNode)
-        closedList.append(current)
+        closedList.add(current)
         # if you're at end, return path (backtrackingly)
         if current == end:
             path = []
@@ -118,7 +118,7 @@ def astar(app, startval, endval):
             return path[::-1]
 
         children = []
-        print("here")
+        #print("here")
         # children are adjacent nodes
         for (drow, dcol) in [(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)]:
             row = current.position[0] + drow
@@ -127,17 +127,14 @@ def astar(app, startval, endval):
                 new_node = Node(current, (row,col))
                 children.append(new_node)
 
+        # Thanks to TA Elena H for helping me debug this part! 
         for child in children:
-            for closedChild in closedList:
-                if child != closedChild:
-                    child.distance = current.distance + 1
-                    child.heuristic = ((child.position[0] - end.position[0]) ** 2) + ((child.position[1] - end.position[1]) ** 2)
-                    child.cost = child.distance + child.heuristic
-
-                    for openNode in openList:
-                        if child == openNode and child.distance > openNode.distance:
-                            continue
-                    openList.append(child)
+            if child not in closedList:
+                child.distance = current.distance + 1
+                child.heuristic = ((child.position[0] - end.position[0]) ** 2) + ((child.position[1] - end.position[1]) ** 2)
+                child.cost = child.distance + child.heuristic  
+            if child not in openList:                    
+                openList.append(child)
 
 def ghostCanMove(app, drow, dcol, row, col):
     if drow == 0:
@@ -145,24 +142,24 @@ def ghostCanMove(app, drow, dcol, row, col):
             return True
         elif dcol == -1 and not app.gridBlocks[row][col].rightLine:
             return True
-    elif dcol == 0:
-        if drow == 1 and not app.gridBlocks[row][col].bottomLine:
+    if dcol == 0:
+        if drow == 1 and not app.gridBlocks[row][col].topLine:
             return True
-        elif drow == -1 and not app.gridBlocks[row][col].topLine:
+        elif drow == -1 and not app.gridBlocks[row][col].bottomLine:
             return True
     return False
 
 def moveGhost(app):
-    print("entered")
     gRow, gCol = getCell(app, app.ghostX, app.ghostY)
     pRow, pCol = getCell(app, app.playerX, app.playerY)
     start = (gRow, gCol)
     end = (pRow, pCol)
-    print("start:", start, "end", end)
-    print("star")
-    path = astar(app, start, end)
-    print("path:", path)
-    #(app.ghostX, app.ghostY) = path[1]
+    app.path = astar(app, start, end)
+    if len(app.path) > 1:
+        row, col = app.path[1]
+        (x0, y0, x1, y1) = getCellBounds(app, row, col)
+        app.ghostX = (x0 + x1) //2
+        app.ghostY = (y0 + y1)//2
 
 ########################################################
 # Data Classes and Normal Classes
@@ -186,6 +183,8 @@ class Node():
     def __repr__(self):
         return f"Node at {self.position} with f={self.cost}"
 
+    def __hash__(self):
+        return hash((self.parent, self.position, self.distance, self.heuristic, self.cost))
 ########################################################
 # App stuff
 ########################################################
@@ -215,6 +214,7 @@ def appStarted(app):
     app.playerY = app.margin * 2
     app.ghostX  = app.width - app.margin * 2
     app.ghostY  = app.height - app.margin * 2
+    app.pathVal = 0
 
     app.titleScreen = True
     app.helpScreen = False
@@ -232,9 +232,9 @@ def appStarted(app):
     makeMaze(app, app.rows, app.cols)
 
 def timerFired(app):
-    #ghostMove(app)
+    moveGhost(app)
     app.t0 += 1
-    if app.t0 > 30:
+    if app.t0 > 20:
         app.titleScreen = False
 
 def chooseBonus(app):
@@ -302,6 +302,8 @@ def isLegal(app, oldRow, oldCol, newRow, newCol):
     return False
                       
 def keyPressed(app, event):
+    if event.key == "q":
+        moveGhost(app)
     if app.titleScreen:
         return 
     if not app.journalVisible:
