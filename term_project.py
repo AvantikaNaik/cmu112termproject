@@ -246,6 +246,17 @@ def appStarted(app):
     app.clues = ["handprint", "ectoplasm", "freezing temps", "blood splatter",\
                 "writing", "water"]
     chooseClues(app)
+    app.currentClues = [app.firstClue, app.secondClue, app.thirdClue]
+    app.foundFirstClue = False
+    app.foundSecondClue = False
+    app.foundThirdClue = False
+    app.clue1Timer = 0
+    app.clue1ToastShowing = False
+    app.clue2Timer = 0
+    app.clue2ToastShowing = False
+    app.clue3Timer = 0
+    app.clue3ToastShowing = False
+
 
     app.keyLocation = (0, 0)
     spawnKey(app)
@@ -282,10 +293,30 @@ def gotBonus(app):
         return True 
     return False
 
+def gotClue(app):
+    pRow, pCol = getCell(app, app.playerX, app.playerY)
+    for i in range(len(app.currentClues)):
+        (item, row, col) = app.currentClues[i]
+        if row == pRow and col == pCol:
+            print("entered main if")
+            if i == 0:
+                print("i=0")
+                app.foundFirstClue = True
+                app.currentClues[i] = (item, -20, -20)
+            elif i == 1:
+                print("i=1")
+                app.foundSecondClue = True
+                app.currentClues[i] = (item, -20, -20)
+            elif i == 2:
+                print("i=2")
+                app.foundThirdClue = True 
+                app.currentClues[i] = (item, -20, -20)
+
 def checkForWin(app):
     row, col = getCell(app, app.playerX, app.playerY)
     if app.gotKey and (row, col) == (app.rows - 1, app.cols - 1):
-        app.totalPoints += 1000
+        if not app.win:
+            app.totalPoints += 1000
         return True
     return False
 
@@ -342,6 +373,28 @@ def isLegal(app, oldRow, oldCol, newRow, newCol):
 
 def timerFired(app):
     app.time += 1
+    gotClue(app)
+    if app.foundFirstClue:
+        app.clue1Timer += 1
+        app.clue1ToastShowing = True
+        app.firstClue = (app.firstClue[0], -20, -20)
+    if app.clue1Timer > 10:
+        app.clue1ToastShowing = False
+        app.foundFirstClue = False
+    if app.foundSecondClue:
+        app.clue2Timer += 1
+        app.clue2ToastShowing = True
+        app.secondClue = (app.secondClue[0], -20, -20)
+    if app.clue2Timer > 10:
+        app.clue2ToastShowing = False
+        app.foundSecondClue = False
+    if app.foundThirdClue:
+        app.clue3Timer += 1
+        app.clue3ToastShowing = True
+        app.thirdClue = (app.thirdClue[0], -20, -20)
+    if app.clue3Timer > 10:
+        app.clue3ToastShowing = False
+        app.foundThirdClue = False
     if checkForWin(app):
         app.win = True
     if gotBonus(app):
@@ -366,9 +419,10 @@ def timerFired(app):
         app.crucifixToastShowing = True
     if gotKey(app):
         app.gotKey = True
-        app.totalPoints += 100
         app.keyLocation = (-20, -20)
         app.keyToastShowing = True
+        if app.keyToastShowing:
+            app.totalPoints += 10
     if app.keyToastShowing:
         app.keyToastTimer += 1
         if app.keyToastTimer > 7:
@@ -529,14 +583,14 @@ def drawToastMessage(app, canvas, item):
     elif item in {"crucifix", "snack", "battery"}:
         text = f'{item} found. Bonus applied'
     else: 
-        text = f"{item} has been aquired. Mark it in your journal to get points"
+        text = f"{item} discovered. Mark it in your journal for points"
 
     if app.playerY < app.height//2:
         canvas.create_rectangle(0, 7 * app.height//8, app.width, app.height, fill="red")
-        canvas.create_text(app.width//2, 15 * app.height//16, text=text, fill="black", font="Gothic 25 bold" )
+        canvas.create_text(app.width//2, 15 * app.height//16, text=text, fill="black", font="Gothic 15 bold" )
     else: 
         canvas.create_rectangle(0, 0, app.width, app.height//8, fill="red")
-        canvas.create_text(app.width//2, app.height//16, text=text, fill="black", font="Gothic 25 bold" )
+        canvas.create_text(app.width//2, app.height//16, text=text, fill="black", font="Gothic 15 bold" )
 
 def drawDoor(app, canvas):
     (x0, y0, x1, y1) = getCellBounds(app, app.rows - 1, app.cols - 1)
@@ -590,6 +644,12 @@ def redrawAll(app, canvas):
         drawToastMessage(app, canvas, app.bonusItem[0])
     if app.crucifixToastShowing:
         drawToastMessage(app, canvas, "used")
+    if app.clue1ToastShowing:
+        drawToastMessage(app, canvas, app.currentClues[0][0])
+    if app.clue2ToastShowing:
+        drawToastMessage(app, canvas, app.currentClues[1][0])
+    if app.clue3ToastShowing:
+        drawToastMessage(app, canvas, app.currentClues[2][0])
     if app.journalVisible:
         drawJournalScreen(app, canvas)
         drawTextBoxText(app, canvas)
