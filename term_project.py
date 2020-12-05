@@ -234,6 +234,10 @@ def appStarted(app):
 
     app.bonus = ["crucifix", "battery", "snack"]
     chooseBonus(app)
+    app.bonusToastTimer = 0
+    app.bonusToastShowing = False
+    app.hasCrucifix = False
+
     app.lightDistance = 1
 
     app.clues = ["handprint", "ectoplasm", "freezing temps", "blood splatter",\
@@ -256,9 +260,29 @@ def gotKey(app):
         return True
     return False
 
+def gotBonus(app):
+    pRow, pCol = getCell(app, app.playerX, app.playerY)
+    if pRow == app.bonusItem[1] and pCol == app.bonusItem[2]:
+        return True 
+    return False
 
 def timerFired(app):
     app.time += 1
+    if gotBonus(app):
+        app.foundBonus = True
+        app.bonusToastShowing = True
+        item = app.bonusItem[0]
+        app.bonusItem = (item, -20, -20)
+        if item == "snack":
+            app.playerSpeed = 10 
+        elif item == "battery": 
+            app.lightDistance = 2
+        elif item == "crucifix":
+            app.hasCrucifix = True 
+    if app.bonusToastShowing:
+        app.bonusToastTimer += 1
+        if app.bonusToastTimer > 10:
+            app.bonusToastShowing = False
     if gotKey(app):
         app.gotKey = True
         app.totalPoints += 100
@@ -282,6 +306,7 @@ def timerFired(app):
 def chooseBonus(app):
     bonusNum = random.randint(0, len(app.bonus) - 1)
     item = app.bonus[bonusNum]
+    print(item)
     bonusRow = random.randint(0, app.rows -1)
     bonusCol = random.randint(0, app.cols -1)
     app.bonusItem = (item, bonusRow, bonusCol)
@@ -306,7 +331,7 @@ def playerLegal(app, oldRow, oldCol):
     return True
 
 def ghostMove(app):
-    if distance(app.targetX, app.targetY, app.ghostX, app.ghostY) > 4:
+    if distance(app.targetX, app.targetY, app.ghostX, app.ghostY) > 7:
         if app.targetX > app.ghostX:
             app.ghostX += 5
         else: app.ghostX -= 5
@@ -455,19 +480,27 @@ def drawGameOver(app, canvas):
     canvas.create_text(app.width//2, 3*app.height//4, text="Press r to reset", fill="red", font="Gothic 60 bold")
 
 def drawToastMessage(app, canvas, item):
-    canvas.create_rectangle(0, 5 * app.height//6, app.width, app.height, fill="red")
     if item == "key":    
         text = f'{item} found. Now you can escape'
+    elif item in {"crucifix", "snack", "battery"}:
+        text = f'{item} found. Bonus applied'
     else: 
         text = f"{item} has been aquired. Mark it in your journal to get points"
-    canvas.create_text(app.width//2, 11 * app.height//12, text=text, fill="black", font="Gothic 30 bold" )
+
+    if app.playerY < app.height//2:
+        canvas.create_rectangle(0, 7 * app.height//8, app.width, app.height, fill="red")
+        canvas.create_text(app.width//2, 15 * app.height//16, text=text, fill="black", font="Gothic 25 bold" )
+    else: 
+        canvas.create_rectangle(0, 0, app.width, app.height//8, fill="red")
+        canvas.create_text(app.width//2, app.height//16, text=text, fill="black", font="Gothic 25 bold" )
+
 
 def drawFogOfWar(app, canvas):
     (pRow, pCol) = getCell(app, app.playerX, app.playerY)
     for row in range(app.rows):
         for col in range(app.cols):
-            if not ((row == pRow or row + app.lightDistance == pRow or row - app.lightDistance == pRow) and \
-                (col == pCol or col + app.lightDistance == pCol or col - app.lightDistance == pCol)):
+            if not ((abs(row - pRow) <= app.lightDistance) and \
+                (abs(col - pCol) <= app.lightDistance)):
                 (x0, y0, x1, y1) = getCellBounds(app, row, col)
                 canvas.create_rectangle(x0, y0, x1, y1, width=0, fill="gray8")
 
@@ -492,7 +525,7 @@ def redrawAll(app, canvas):
     drawGhost(app, canvas)
     drawBonus(app, canvas)
     drawClues(app, canvas)
-    drawFogOfWar(app, canvas)
+    #drawFogOfWar(app, canvas)
     if app.titleScreen:
         drawTitle(app, canvas)
     if app.helpScreen:
@@ -501,6 +534,8 @@ def redrawAll(app, canvas):
         drawGameOver(app, canvas)
     if app.keyToastShowing:
         drawToastMessage(app, canvas, "key")
+    if app.bonusToastShowing:
+        drawToastMessage(app, canvas, app.bonusItem[0])
     if app.journalVisible:
         drawJournalScreen(app, canvas)
         drawTextBoxText(app, canvas)
