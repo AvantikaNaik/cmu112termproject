@@ -22,3 +22,10 @@ is made out of 4 main parts:
 2. Finding Key - 100
 3. Finding Clue - 100 per clue
 4. Surviving - .5 per timerFired
+
+Also I'm considering adding a vent feature to be able to go from one grid
+location to another one by venting, which will make the game play more 
+interesting and engaging. Also, the journal seems to be not as interesting, so
+I am thinking of adding a feature where if you record all the clues in the 
+journal then you can unlock a ghost killer item. 
+
