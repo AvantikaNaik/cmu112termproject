@@ -1,0 +1,24 @@
+Updates for TP2: 
+
+1. Not sure if audio feature can be implemented. It'll be after 
+I do TP2, so if I can figure it out before TP3 then I will have the 
+feature. (Fast Fourier Transformations part)
+
+2. I fixed the algorithm issue for ghost tracking with A* so now the
+ghost can't go diagonally, which is more realistic game play. 
+
+3. Small visual changed compared to storyboard - once you find key, 
+a door is drawn rather than the grid becoming yellow
+
+Also, welcome slide does not have a key on it. 
+
+Fog of war is not circular. 
+
+Once game ends (win or die), the total score isn't broken down into 
+pieces, rather it's just displayed as the whole score. The score also 
+is made out of 4 main parts: 
+
+1. Winning - 1000
+2. Finding Key - 100
+3. Finding Clue - 100 per clue
+4. Surviving - .5 per timerFired

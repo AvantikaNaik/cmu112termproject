@@ -270,48 +270,9 @@ def gotBonus(app):
 def checkForWin(app):
     row, col = getCell(app, app.playerX, app.playerY)
     if app.gotKey and (row, col) == (app.rows - 1, app.cols - 1):
+        app.totalPoints += 1000
         return True
     return False
-
-
-def timerFired(app):
-    app.time += 1
-    if checkForWin(app):
-        app.win = True
-    if gotBonus(app):
-        app.foundBonus = True
-        app.bonusToastShowing = True
-        item = app.bonusItem[0]
-        app.bonusItem = (item, -20, -20)
-        if item == "snack":
-            app.playerSpeed = 10 
-        elif item == "battery": 
-            app.lightDistance = 2
-        elif item == "crucifix":
-            app.hasCrucifix = True 
-    if app.bonusToastShowing:
-        app.bonusToastTimer += 1
-        if app.bonusToastTimer > 10:
-            app.bonusToastShowing = False
-    if gotKey(app):
-        app.gotKey = True
-        app.totalPoints += 100
-        app.keyLocation = (-20, -20)
-        app.keyToastShowing = True
-    if app.keyToastShowing:
-        app.keyToastTimer += 1
-        if app.keyToastTimer > 10:
-            app.keyToastShowing = False
-    if isDead(app):
-        app.gameOver = True 
-    if not app.titleScreen and not app.helpScreen and (app.time % 5 == 0) :
-        moveGhost(app)
-    app.t0 += 1
-    if app.t0 > 20:
-        app.titleScreen = False
-    if not app.gameOver and not app.win:
-        app.totalPoints += 0.5
-        ghostMove(app)
 
 def chooseBonus(app):
     bonusNum = random.randint(0, len(app.bonus) - 1)
@@ -359,7 +320,50 @@ def isLegal(app, oldRow, oldCol, newRow, newCol):
     if newCol < oldCol and app.gridBlocks[newRow][newCol].rightLine == False:
         return True
     return False
-                      
+
+########################################################
+# timerFired, keyPressed, mousePressed
+########################################################
+
+def timerFired(app):
+    app.time += 1
+    if checkForWin(app):
+        app.win = True
+    if gotBonus(app):
+        app.foundBonus = True
+        app.bonusToastShowing = True
+        item = app.bonusItem[0]
+        app.bonusItem = (item, -20, -20)
+        if item == "snack":
+            app.playerSpeed = 10 
+        elif item == "battery": 
+            app.lightDistance = 2
+        elif item == "crucifix":
+            app.hasCrucifix = True 
+    if app.bonusToastShowing:
+        app.bonusToastTimer += 1
+        if app.bonusToastTimer > 10:
+            app.bonusToastShowing = False
+    if gotKey(app):
+        app.gotKey = True
+        app.totalPoints += 100
+        app.keyLocation = (-20, -20)
+        app.keyToastShowing = True
+    if app.keyToastShowing:
+        app.keyToastTimer += 1
+        if app.keyToastTimer > 10:
+            app.keyToastShowing = False
+    if isDead(app):
+        app.gameOver = True 
+    if not app.titleScreen and not app.helpScreen and (app.time % 5 == 0) :
+        moveGhost(app)
+    app.t0 += 1
+    if app.t0 > 20:
+        app.titleScreen = False
+    if not app.gameOver and not app.win:
+        app.totalPoints += 0.5
+        ghostMove(app)
+
 def keyPressed(app, event):
     if event.key == "q":
         moveGhost(app)
@@ -420,6 +424,10 @@ def mousePressed(app, event):
                 app.journalEntry = True
             else: app.currentText
         print(app.currentText)
+
+########################################################
+# Draw Functions
+########################################################
 
 def drawTextBoxText(app, canvas):
     for (text, x, y) in app.journal:
@@ -564,7 +572,6 @@ def redrawAll(app, canvas):
     if app.journalVisible:
         drawJournalScreen(app, canvas)
         drawTextBoxText(app, canvas)
-
 
 runApp(width=800, height=800)
 
