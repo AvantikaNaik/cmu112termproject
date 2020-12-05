@@ -84,9 +84,14 @@ def makeMaze(app, width, height):
     backtrackThrough(app,row ,col)
 
 def spawnKey(app):
-    row = random.randint(2,app.rows-1)
-    col = random.randint(2,app.cols-1)
-    app.keyLocation = (row, col)
+    keyRow = random.randint(3,app.rows-1)
+    keyCol = random.randint(3,app.cols-1)
+    currentlyPlacedItems = app.currentClues
+    currentlyPlacedItems.append(app.bonusItem)
+    for (item, row, col) in currentlyPlacedItems:
+        if keyRow == row and keyCol == col:
+            keyRow = random.randint(3, app.rows -1)
+    app.keyLocation = (keyRow, keyCol)
 
 # https://mat.uab.cat/~alseda/MasterOpt/AStar-Algorithm.pdf
 def astar(app, startval, endval):
@@ -231,15 +236,6 @@ def appStarted(app):
     app.keyToastShowing = False
     app.keyToastTimer = 0
 
-    app.bonus = ["crucifix", "battery", "snack"]
-    chooseBonus(app)
-    app.bonusToastTimer = 0
-    app.bonusToastShowing = False
-    app.hasCrucifix = False
-    app.usedCrucifix = False
-    app.crucifixTimer = 0
-    app.crucifixToastShowing = False
-
     app.lightDistance = 1
     app.win = False
 
@@ -256,6 +252,15 @@ def appStarted(app):
     app.clue2ToastShowing = False
     app.clue3Timer = 0
     app.clue3ToastShowing = False
+
+    app.bonus = ["crucifix", "battery", "snack"]
+    chooseBonus(app)
+    app.bonusToastTimer = 0
+    app.bonusToastShowing = False
+    app.hasCrucifix = False
+    app.usedCrucifix = False
+    app.crucifixTimer = 0
+    app.crucifixToastShowing = False
 
 
     app.keyLocation = (0, 0)
@@ -323,16 +328,20 @@ def checkForWin(app):
 def chooseBonus(app):
     bonusNum = random.randint(0, len(app.bonus) - 1)
     item = app.bonus[bonusNum]
-    print(item)
-    bonusRow = random.randint(0, app.rows -1)
-    bonusCol = random.randint(0, app.cols -1)
+    bonusRow = random.randint(2, app.rows -1)
+    bonusCol = random.randint(2, app.cols -1)
+    for (clue, row, col) in app.currentClues:
+        if bonusRow == row and bonusCol == col:
+            bonusRow = random.randint(2, app.rows -1)
     app.bonusItem = (item, bonusRow, bonusCol)
 
 def chooseClues(app):
     (clue0, clue1, clue2) = tuple(random.sample(app.clues,3))
-    app.firstClue = (clue0, random.randint(0, app.rows-1), random.randint(0, app.cols -1))
-    app.secondClue = (clue1, random.randint(0, app.rows-1), random.randint(0, app.cols -1))
-    app.thirdClue = (clue2, random.randint(0, app.rows-1), random.randint(0, app.cols -1))
+    (row1, row2, row3) = tuple(random.sample(list(range(app.rows)), 3))
+    (col1, col2, col3) = tuple(random.sample(list(range(app.cols)), 3))
+    app.firstClue = (clue0, row1, col1)
+    app.secondClue = (clue1,row2,col2)
+    app.thirdClue = (clue2, row3, col3)
 
 
 def playerLegal(app, oldRow, oldCol):
@@ -439,11 +448,10 @@ def timerFired(app):
         ghostMove(app)
 
 def keyPressed(app, event):
-    if event.key == "q":
-        moveGhost(app)
     if app.titleScreen:
         return 
     if not app.journalVisible:
+        ghostMove(app)
         if event.key == "r":
             appStarted(app)
         if event.key == "h":
