@@ -198,7 +198,7 @@ def appStarted(app):
     app.text1= ["Click to start typing...", app.width//2, app.height//2]
     app.text2= ["Click to start typing...", app.width//2, 3 * app.height//4]
     app.journal = [app.text0, app.text1 ,app.text2]
-    app.currentText = 0
+    app.currentText = -1
 
     app.rows = 10
     app.cols = 10
@@ -418,8 +418,9 @@ def keyPressed(app, event):
     if app.journalEntry:
         if (app.journal[app.currentText])[0] == "Click to start typing...":
             (app.journal[app.currentText])[0] = ""
-        if event.key == "Enter":
+        if event.key == "Enter" or event.key == "Escape":
             app.journalEntry = not app.journalEntry
+            app.currentText = -1
         if event.key == "Backspace":
             endVal = len((app.journal[app.currentText])[0])
             if endVal != 0:
@@ -430,7 +431,7 @@ def keyPressed(app, event):
             (app.journal[app.currentText])[0] += " "
         elif event.key in {"Up", "Down", "Left","Right"}:
             (app.journal[app.currentText])[0] += "" 
-        elif event.key not in {"Backspace", "Enter"}:
+        elif event.key not in {"Backspace", "Enter", "Escape"}:
             (app.journal[app.currentText])[0] += event.key
 
 
@@ -438,8 +439,8 @@ def mousePressed(app, event):
     if app.journalVisible:
         for i in range(len(app.journal)):
             (text, textX, textY) = app.journal[i]
-            horizontal = 3 * len(text)
-            if abs(textX - event.x) <= horizontal and abs(textY - event.y) <= 30:
+            horizontal = app.width-100
+            if abs(textX - event.x) <= horizontal and abs(textY - event.y) <= 40:
                 app.currentText = i
                 app.journalEntry = True
             else: app.currentText
@@ -450,13 +451,16 @@ def mousePressed(app, event):
 ########################################################
 
 def drawTextBoxText(app, canvas):
-    for (text, x, y) in app.journal:
-        fill="tan"
+    for i in range(len(app.journal)):
+        (text, x, y) = app.journal[i]
+        if i == app.currentText:
+            fill="brown"
+        else: fill="tan"
         canvas.create_rectangle(50, y-20, app.width-50, y +20, fill=fill)
         canvas.create_text(x, y, text=text)
 
 def drawJournalScreen(app, canvas):
-    canvas.create_rectangle(0, 0, app.width, app.height, fill = "brown")
+    canvas.create_rectangle(0, 0, app.width, app.height, fill = "saddle brown")
     canvas.create_rectangle(app.width//4, 10, 3 * app.width//4, 50, fill = "yellow")
     canvas.create_text(app.width//2, 30, text="My Journal Entries") 
 
