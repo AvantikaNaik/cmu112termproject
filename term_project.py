@@ -261,6 +261,7 @@ def appStarted(app):
     app.usedCrucifix = False
     app.crucifixTimer = 0
     app.crucifixToastShowing = False
+    app.nextLevelTimer = 15
 
 
     app.keyLocation = (0, 0)
@@ -402,6 +403,10 @@ def timerFired(app):
         app.foundThirdClue = False
     if checkForWin(app):
         app.win = True
+    if app.win:
+        app.nextLevelTimer -= 0.5
+    if app.nextLevelTimer == 0:
+        appStarted(app)
     if gotBonus(app):
         app.foundBonus = True
         app.bonusToastShowing = True
@@ -689,7 +694,7 @@ def drawWinScreen(app, canvas):
     canvas.create_text(app.width//2, app.height//4, text="YOU ESCAPED...FOR NOW",fill="red", font="Gothic 40 bold")
     text = f'Total Score:{round(app.totalPoints)}'
     canvas.create_text(app.width//2, app.height//2, text=text, fill="red", font="Gothic 40 bold")
-    canvas.create_text(app.width//2, 3*app.height//4, text="Press r to play again", fill="red", font="Gothic 40 bold")
+    canvas.create_text(app.width//2, 3*app.height//4, text=f"Next level in {round(app.nextLevelTimer)}", fill="red", font="Gothic 40 bold")
 
 def drawFogOfWar(app, canvas):
     (pRow, pCol) = getCell(app, app.playerX, app.playerY)
