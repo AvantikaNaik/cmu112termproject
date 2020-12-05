@@ -120,7 +120,6 @@ def astar(app, startval, endval):
             return path[::-1]
 
         children = []
-        #print("here")
         # children are adjacent nodes
         for (drow, dcol) in [(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)]:
             row = current.position[0] + drow
@@ -237,6 +236,9 @@ def appStarted(app):
     app.bonusToastTimer = 0
     app.bonusToastShowing = False
     app.hasCrucifix = False
+    app.usedCrucifix = False
+    app.crucifixTimer = 0
+    app.crucifixToastShowing = False
 
     app.lightDistance = 1
     app.win = False
@@ -250,6 +252,19 @@ def appStarted(app):
     makeMaze(app, app.rows, app.cols)
 
 def isDead(app):
+    if app.hasCrucifix and distance(app.playerX, app.playerY, app.ghostX, app.ghostY) < 20: 
+        app.hasCrucifix = False
+        app.usedCrucifix = True 
+        if app.playerY > app.height//2:
+            ghostRow = random.randint(5, 9)
+        else: ghostRow = random.randint(1,5)
+        if app.playerX > app.width//2:
+            ghostCol = random.randint(1,5)
+        else: ghostCol = random.randint(5,9)
+        (x0, y0, x1, y1) = getCellBounds(app, ghostRow, ghostCol)
+        app.ghostX = (x0+x1)//2
+        app.ghostY = (y0+y1)//2
+        return False
     if distance(app.playerX, app.playerY, app.ghostX, app.ghostY) < 20:
         return True 
     return False 
@@ -342,8 +357,13 @@ def timerFired(app):
             app.hasCrucifix = True 
     if app.bonusToastShowing:
         app.bonusToastTimer += 1
-        if app.bonusToastTimer > 10:
+        if app.bonusToastTimer > 7:
             app.bonusToastShowing = False
+    if app.crucifixTimer > 7:
+        app.crucifixToastShowing = False
+    if app.usedCrucifix and app.crucifixTimer < 7:
+        app.crucifixTimer += 1
+        app.crucifixToastShowing = True
     if gotKey(app):
         app.gotKey = True
         app.totalPoints += 100
@@ -351,14 +371,14 @@ def timerFired(app):
         app.keyToastShowing = True
     if app.keyToastShowing:
         app.keyToastTimer += 1
-        if app.keyToastTimer > 10:
+        if app.keyToastTimer > 7:
             app.keyToastShowing = False
     if isDead(app):
         app.gameOver = True 
     if not app.titleScreen and not app.helpScreen and (app.time % 5 == 0) :
         moveGhost(app)
     app.t0 += 1
-    if app.t0 > 20:
+    if app.t0 > 15:
         app.titleScreen = False
     if not app.gameOver and not app.win:
         app.totalPoints += 0.5
@@ -431,6 +451,8 @@ def mousePressed(app, event):
 
 def drawTextBoxText(app, canvas):
     for (text, x, y) in app.journal:
+        fill="tan"
+        canvas.create_rectangle(50, y-20, app.width-50, y +20, fill=fill)
         canvas.create_text(x, y, text=text)
 
 def drawJournalScreen(app, canvas):
@@ -440,7 +462,7 @@ def drawJournalScreen(app, canvas):
 
 def drawKey(app, canvas):
     (x0, y0, x1, y1) = getCellBounds(app,app.keyLocation[0], app.keyLocation[1])
-    canvas.create_oval(x0 + 10, y0+ 10, x1-10, y1-10, fill="yellow")
+    canvas.create_oval(x0 + 10, y0 + 10, x1 - 10, y1 - 10, fill="yellow")
 
 def drawPlayer(app, canvas):
     canvas.create_oval(app.playerX - 10, app.playerY - 10, app.playerX + 10, app.playerY + 10, fill="blue")
@@ -498,6 +520,8 @@ def drawGameOver(app, canvas):
 def drawToastMessage(app, canvas, item):
     if item == "key":    
         text = f'{item} found. Now you can escape'
+    elif item == "used":
+        text = 'Crucifix used. Ghost scared away'
     elif item in {"crucifix", "snack", "battery"}:
         text = f'{item} found. Bonus applied'
     else: 
@@ -556,6 +580,15 @@ def redrawAll(app, canvas):
     if app.gotKey:
         drawDoor(app, canvas)
     #drawFogOfWar(app, canvas)
+    if app.keyToastShowing:
+        drawToastMessage(app, canvas, "key")
+    if app.bonusToastShowing:
+        drawToastMessage(app, canvas, app.bonusItem[0])
+    if app.crucifixToastShowing:
+        drawToastMessage(app, canvas, "used")
+    if app.journalVisible:
+        drawJournalScreen(app, canvas)
+        drawTextBoxText(app, canvas)
     if app.titleScreen:
         drawTitle(app, canvas)
     if app.helpScreen:
@@ -563,15 +596,7 @@ def redrawAll(app, canvas):
     if app.gameOver:
         drawGameOver(app, canvas)
     if app.win:
-        print("drawing")
         drawWinScreen(app, canvas)
-    if app.keyToastShowing:
-        drawToastMessage(app, canvas, "key")
-    if app.bonusToastShowing:
-        drawToastMessage(app, canvas, app.bonusItem[0])
-    if app.journalVisible:
-        drawJournalScreen(app, canvas)
-        drawTextBoxText(app, canvas)
 
 runApp(width=800, height=800)
 
