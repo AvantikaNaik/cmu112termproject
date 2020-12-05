@@ -234,6 +234,7 @@ def appStarted(app):
 
     app.bonus = ["crucifix", "battery", "snack"]
     chooseBonus(app)
+    app.lightDistance = 1
 
     app.clues = ["handprint", "ectoplasm", "freezing temps", "blood splatter",\
                 "writing", "water"]
@@ -461,6 +462,16 @@ def drawToastMessage(app, canvas, item):
         text = f"{item} has been aquired. Mark it in your journal to get points"
     canvas.create_text(app.width//2, 11 * app.height//12, text=text, fill="black", font="Gothic 30 bold" )
 
+def drawFogOfWar(app, canvas):
+    (pRow, pCol) = getCell(app, app.playerX, app.playerY)
+    for row in range(app.rows):
+        for col in range(app.cols):
+            if not ((row == pRow or row + app.lightDistance == pRow or row - app.lightDistance == pRow) and \
+                (col == pCol or col + app.lightDistance == pCol or col - app.lightDistance == pCol)):
+                (x0, y0, x1, y1) = getCellBounds(app, row, col)
+                canvas.create_rectangle(x0, y0, x1, y1, width=0, fill="gray8")
+
+
 def redrawAll(app, canvas):
     canvas.create_rectangle(0, 0, app.height, app.width, fill = "red")
     for row in range(app.rows):
@@ -481,6 +492,7 @@ def redrawAll(app, canvas):
     drawGhost(app, canvas)
     drawBonus(app, canvas)
     drawClues(app, canvas)
+    drawFogOfWar(app, canvas)
     if app.titleScreen:
         drawTitle(app, canvas)
     if app.helpScreen:
