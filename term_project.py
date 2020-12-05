@@ -9,7 +9,7 @@ import random
 import time
 from dataclasses import make_dataclass
 from random import shuffle, randrange
-
+import math
 
 #######################################################
 # 15-112 Functions
@@ -303,17 +303,13 @@ def gotClue(app):
     for i in range(len(app.currentClues)):
         (item, row, col) = app.currentClues[i]
         if row == pRow and col == pCol:
-            print("entered main if")
             if i == 0:
-                print("i=0")
                 app.foundFirstClue = True
                 app.currentClues[i] = (item, -20, -20)
             elif i == 1:
-                print("i=1")
                 app.foundSecondClue = True
                 app.currentClues[i] = (item, -20, -20)
             elif i == 2:
-                print("i=2")
                 app.foundThirdClue = True 
                 app.currentClues[i] = (item, -20, -20)
 
@@ -506,7 +502,6 @@ def mousePressed(app, event):
                 app.currentText = i
                 app.journalEntry = True
             else: app.currentText
-        print(app.currentText)
 
 ########################################################
 # Draw Functions
@@ -597,8 +592,67 @@ def drawSnack(app, canvas, x0, y0, x1, y1):
 def drawClues(app, canvas):
     for (clue, row, col) in [app.firstClue, app.secondClue, app.thirdClue]:
         (x0, y0, x1, y1) = getCellBounds(app, row, col)
-        canvas.create_oval(x0 +15, y0+15, x1-15, y1-15, fill="lime")
-        canvas.create_text((x0 + x1) // 2, (y0 + y1)//2, text=clue, fill="black")
+        if clue == "water":
+            drawWater(app, canvas,x0, y0, x1, y1)
+        elif clue == "blood splatter":
+            drawBloodSplatter(app, canvas,x0, y0, x1, y1)
+        elif clue == "ectoplasm":
+            drawEctoplasm(app, canvas,x0, y0, x1, y1)
+        elif clue == "freezing temps":
+            drawFreezingTemps(app, canvas,x0, y0, x1, y1)
+        elif clue == "writing":
+            drawWriting(app, canvas,x0, y0, x1, y1)
+        else:
+            drawHandprint(app, canvas,x0, y0, x1, y1)
+
+def drawHandprint(app, canvas,x0, y0, x1, y1):
+    midX, midY = (x0+x1)//2, (y0+y1)//2
+    canvas.create_oval(midX - 10, midY-12, midX+10, midY+12, width=0, fill="gray")
+    canvas.create_oval(midX-20, midY+3, midX-14, midY,width=0, fill="gray" )
+    canvas.create_oval(midX-12, midY-33, midX-9, midY-15, width=0, fill="gray")
+    canvas.create_oval(midX-6, midY-33, midX-3, midY-18, width=0, fill="gray")
+    canvas.create_oval(midX, midY-33, midX+3, midY-18, width=0, fill="gray")
+    canvas.create_oval(midX+6, midY-30, midX+9, midY-16, width=0, fill="gray")
+
+def drawWriting(app, canvas,x0, y0, x1, y1):
+    midX, midY = (x0+x1)//2, (y0+y1)//2
+    canvas.create_oval(midX - 20, midY-20, midX+20, midY+20, width=5, outline="white")
+    y3 = round(20 * math.sin(144))
+    y4 = round(20 * math.sin(306))
+    x3 = round(20 * math.cos(162))
+    x4 = round(20 * math.cos(18))
+    canvas.create_line(midX, midY-20, midX-x4, midY-y4, width=3, fill="white")
+    canvas.create_line(midX, midY-20, midX+x4, midY-y4, width=3, fill="white")
+    canvas.create_line(midX+x4, midY+y3, midX-x4, midY-y4, width=3, fill="white")
+    canvas.create_line(midX-x4, midY+y3, midX+x4, midY-y4, width=3, fill="white")
+    canvas.create_line(midX-x4, midY+y3, midX+x4, midY+y3, width=3, fill="white")
+
+def drawFreezingTemps(app, canvas,x0, y0, x1, y1):
+    midX, midY = (x0+x1)//2, (y0+y1)//2
+    canvas.create_oval(midX - 10, midY+7, midX+10, midY+27, fill = "gray")
+    canvas.create_rectangle(midX-3,y0 + 15 ,midX+3, midY+10, width=0, fill="gray")
+    canvas.create_oval(midX - 5, midY+12, midX+5, midY+22, fill = "red")
+    canvas.create_rectangle(midX-1,midY,midX+1, midY+12, width=0, fill="red")
+    
+def drawBloodSplatter(app, canvas,x0, y0, x1, y1):
+    midX, midY = (x0+x1)//2, (y0+y1)//2
+    canvas.create_oval(midX-10, midY-10, midX+10, midY+10, width=0, fill="red3")
+    canvas.create_oval(midX-25, midY-15, midX-10, midY, width=0, fill="red3")
+    canvas.create_oval(midX-20, midY+15, midX, midY+20, width=0, fill="red3")
+
+def drawEctoplasm(app, canvas,x0, y0, x1, y1):
+    midX, midY = (x0+x1)//2, (y0+y1)//2
+    canvas.create_oval(midX-10, midY-10, midX+10, midY+10, width=0, fill="lime")
+    canvas.create_oval(midX-20, midY-8, midX+5, midY+5, width=0, fill="lime")
+    canvas.create_oval(midX-8, midY+4, midX-2, midY+10, width=0, fill="lime")
+    canvas.create_oval(midX+8, midY+5, midX+18, midY+10, width=0, fill="lime")
+
+def drawWater(app, canvas,x0, y0, x1, y1):
+    midX, midY = (x0+x1)//2, (y0+y1)//2
+    canvas.create_oval(midX-10, midY-7, midX+10, midY+17, fill="deep sky blue")
+    x = 10 * math.cos(math.pi/4) 
+    y = 10 * math.sin(math.pi/4)
+    canvas.create_polygon(midX-x-3, midY+2, midX+x+3, midY+2, midX, midY-15, width=0, fill="deep sky blue")
 
 def drawGameOver(app, canvas):
     canvas.create_rectangle(0, 0, app.height, app.width, fill = "black")
