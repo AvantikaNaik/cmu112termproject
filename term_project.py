@@ -527,8 +527,12 @@ def drawJournalScreen(app, canvas):
     canvas.create_text(app.width//2, 30, text="My Journal Entries") 
 
 def drawKey(app, canvas):
-    (x0, y0, x1, y1) = getCellBounds(app,app.keyLocation[0], app.keyLocation[1])
-    canvas.create_oval(x0 + 10, y0 + 10, x1 - 10, y1 - 10, fill="yellow")
+    (x0, y0, x1, y1) = getCellBounds(app, app.keyLocation[0], app.keyLocation[1])
+    midX, midY = (x0+x1)//2, (y0+y1)//2
+    canvas.create_oval(midX - 10, midY+7, midX+10, midY+27, fill = "gold")
+    canvas.create_rectangle(midX-3,y0 + 7 ,midX+3, midY+10, width=0, fill="gold")
+    canvas.create_rectangle(midX, y0+10, midX + 22, y0 + 15, width=0, fill="gold")
+    canvas.create_rectangle(midX, y0+25, midX + 15, y0 + 30, width=0, fill="gold")
 
 def drawPlayer(app, canvas):
     canvas.create_oval(app.playerX - 10, app.playerY - 10, app.playerX + 10, app.playerY + 10, fill="blue")
@@ -567,8 +571,28 @@ def drawHelpScreen(app, canvas):
 def drawBonus(app, canvas):
     (item, row, col) = app.bonusItem
     (x0, y0, x1, y1) = getCellBounds(app, row, col)
-    canvas.create_oval(x0 +20, y0+20, x1-20, y1-20, fill="pink")
-    canvas.create_text((x0 + x1) // 2, (y0 + y1)//2, text=item, fill="black")
+    if item == "crucifix":
+        drawCrucifix(app, canvas, x0, y0, x1, y1)
+    elif item == "battery":
+        drawBattery(app, canvas, x0, y0, x1, y1)
+    else:
+        drawSnack(app, canvas, x0, y0, x1, y1)
+
+def drawCrucifix(app, canvas, x0, y0, x1, y1):
+    midX, midY = (x0+x1)//2, (y0+y1)//2
+    canvas.create_rectangle(midX-3, y0+10, midX+3, y1-10, width=0, fill="brown")
+    canvas.create_rectangle(x0+20, y0+25, x1-20, y0+29, width=0, fill="brown")
+
+def drawBattery(app, canvas, x0, y0, x1, y1):
+    midX, midY = (x0+x1)//2, (y0+y1)//2
+    canvas.create_rectangle(midX-25, midY - 10 , midX + 25, midY + 10, fill="green" )
+    canvas.create_rectangle(midX+25, midY -5, midX+30, midY + 5, width=0, fill="gray")
+
+def drawSnack(app, canvas, x0, y0, x1, y1):
+    midX, midY = (x0+x1)//2, (y0+y1)//2
+    canvas.create_oval(midX-15, midY-10, midX+15, midY+10, width=0, fill="orange")
+    canvas.create_oval(midX-15, midY-10, midX+15, midY+5, width=0, fill="deep pink")
+    canvas.create_oval(midX-10, midY-5, midX+10, midY+2, width=0, fill="black")
 
 def drawClues(app, canvas):
     for (clue, row, col) in [app.firstClue, app.secondClue, app.thirdClue]:
