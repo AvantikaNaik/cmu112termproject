@@ -228,6 +228,10 @@ def appStarted(app):
 
     app.t0 = 0
 
+    app.gotKey= False
+    app.keyToastShowing = False
+    app.keyToastTimer = 0
+
     app.bonus = ["crucifix", "battery", "snack"]
     chooseBonus(app)
 
@@ -244,8 +248,25 @@ def isDead(app):
         return True 
     return False 
 
+def gotKey(app):
+    keyRow, keyCol = app.keyLocation
+    (x0, y0, x1, y1) = getCellBounds(app, keyRow, keyCol)
+    if (x0 < app.playerX < x1) and (y0 < app.playerY < y1):
+        return True
+    return False
+
+
 def timerFired(app):
     app.time += 1
+    if gotKey(app):
+        app.gotKey = True
+        app.totalPoints += 100
+        app.keyLocation = (-20, -20)
+        app.keyToastShowing = True
+    if app.keyToastShowing:
+        app.keyToastTimer += 1
+        if app.keyToastTimer > 10:
+            app.keyToastShowing = False
     if isDead(app):
         app.gameOver = True 
     if not app.titleScreen and not app.helpScreen and (app.time % 5 == 0) :
@@ -432,6 +453,14 @@ def drawGameOver(app, canvas):
     canvas.create_text(app.width//2, app.height//2, text=text, fill="red", font="Gothic 60 bold")
     canvas.create_text(app.width//2, 3*app.height//4, text="Press r to reset", fill="red", font="Gothic 60 bold")
 
+def drawToastMessage(app, canvas, item):
+    canvas.create_rectangle(0, 5 * app.height//6, app.width, app.height, fill="red")
+    if item == "key":    
+        text = f'{item} found. Now you can escape'
+    else: 
+        text = f"{item} has been aquired. Mark it in your journal to get points"
+    canvas.create_text(app.width//2, 11 * app.height//12, text=text, fill="black", font="Gothic 30 bold" )
+
 def redrawAll(app, canvas):
     canvas.create_rectangle(0, 0, app.height, app.width, fill = "red")
     for row in range(app.rows):
@@ -458,6 +487,8 @@ def redrawAll(app, canvas):
         drawHelpScreen(app, canvas)
     if app.gameOver:
         drawGameOver(app, canvas)
+    if app.keyToastShowing:
+        drawToastMessage(app, canvas, "key")
     if app.journalVisible:
         drawJournalScreen(app, canvas)
         drawTextBoxText(app, canvas)
