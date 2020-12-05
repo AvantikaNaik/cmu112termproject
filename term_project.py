@@ -160,8 +160,8 @@ def moveGhost(app):
     if len(app.path) > 1:
         row, col = app.path[1]
         (x0, y0, x1, y1) = getCellBounds(app, row, col)
-        app.ghostX = (x0 + x1) //2
-        app.ghostY = (y0 + y1)//2
+        app.targetX = (x0 + x1) //2
+        app.targetY = (y0 + y1)//2
 
 ########################################################
 # Data Classes and Normal Classes
@@ -216,12 +216,16 @@ def appStarted(app):
     app.playerY = app.margin * 2
     app.ghostX  = app.width - app.margin * 2
     app.ghostY  = app.height - app.margin * 2
+    app.targetX = app.width - 30
+    app.targetY = app.height - 30
     app.pathVal = 0
 
     app.titleScreen = True
     app.helpScreen = False
     app.gameOver = False
     app.totalPoints = 0
+    app.time = 0 
+
     app.t0 = 0
 
     app.bonus = ["crucifix", "battery", "snack"]
@@ -241,20 +245,20 @@ def isDead(app):
     return False 
 
 def timerFired(app):
-    if not app.gameOver:
-        app.totalPoints += 0.5
+    app.time += 1
     if isDead(app):
         app.gameOver = True 
-
-    if not app.titleScreen and not app.helpScreen:
+    if not app.titleScreen and not app.helpScreen and (app.time % 5 == 0) :
         moveGhost(app)
     app.t0 += 1
     if app.t0 > 20:
         app.titleScreen = False
+    if not app.gameOver:
+        app.totalPoints += 0.5
+        ghostMove(app)
 
 def chooseBonus(app):
     bonusNum = random.randint(0, len(app.bonus) - 1)
-    print(bonusNum)
     item = app.bonus[bonusNum]
     bonusRow = random.randint(0, app.rows -1)
     bonusCol = random.randint(0, app.cols -1)
@@ -280,28 +284,13 @@ def playerLegal(app, oldRow, oldCol):
     return True
 
 def ghostMove(app):
-    oldRow, oldCol = getCell(app, app.ghostX, app.ghostY)
-    ghostSpeed = 5
-    if app.playerX > app.ghostX:
-        app.ghostX += ghostSpeed
-        newRow, newCol = getCell(app, app.ghostX, app.ghostY)
-        if not isLegal(app, oldRow, oldCol, newRow, newCol):
-            app.ghostX -= ghostSpeed
-    else:
-        app.ghostX -= ghostSpeed
-        newRow, newCol = getCell(app, app.ghostX, app.ghostY)
-        if not isLegal(app, oldRow, oldCol, newRow, newCol):
-            app.ghostX += ghostSpeed
-    if app.playerY > app.ghostY:
-        app.ghostY += ghostSpeed
-        newRow, newCol = getCell(app, app.ghostX, app.ghostY)
-        if not isLegal(app, oldRow, oldCol, newRow, newCol):
-            app.ghostX -= ghostSpeed
-    else:
-        newRow, newCol = getCell(app, app.ghostX, app.ghostY)
-        app.ghostY -= ghostSpeed
-        if not isLegal(app, oldRow, oldCol, newRow, newCol):
-            app.ghostX += ghostSpeed
+    if distance(app.targetX, app.targetY, app.ghostX, app.ghostY) > 4:
+        if app.targetX > app.ghostX:
+            app.ghostX += 5
+        else: app.ghostX -= 5
+        if app.targetY > app.ghostY:
+            app.ghostY += 5
+        else: app.ghostY -= 5
         
 def isLegal(app, oldRow, oldCol, newRow, newCol):
     if newRow == oldRow and newCol == oldCol:
