@@ -239,6 +239,7 @@ def appStarted(app):
     app.hasCrucifix = False
 
     app.lightDistance = 1
+    app.win = False
 
     app.clues = ["handprint", "ectoplasm", "freezing temps", "blood splatter",\
                 "writing", "water"]
@@ -266,8 +267,17 @@ def gotBonus(app):
         return True 
     return False
 
+def checkForWin(app):
+    row, col = getCell(app, app.playerX, app.playerY)
+    if app.gotKey and (row, col) == (app.rows - 1, app.cols - 1):
+        return True
+    return False
+
+
 def timerFired(app):
     app.time += 1
+    if checkForWin(app):
+        app.win = True
     if gotBonus(app):
         app.foundBonus = True
         app.bonusToastShowing = True
@@ -299,7 +309,7 @@ def timerFired(app):
     app.t0 += 1
     if app.t0 > 20:
         app.titleScreen = False
-    if not app.gameOver:
+    if not app.gameOver and not app.win:
         app.totalPoints += 0.5
         ghostMove(app)
 
@@ -322,10 +332,8 @@ def playerLegal(app, oldRow, oldCol):
     newRow, newCol = getCell(app, app.playerX, app.playerY)
     if (app.playerX - 10 < app.margin or app.playerX + 10 > app.width - app.margin
         or app.playerY - 10 < app.margin or app.playerY + 10 > app.height - app.margin):
-        print("hello")
         return False
     elif not isLegal(app, oldRow, oldCol, newRow, newCol) :
-        print("elsecase")
         return False
 
     return True
@@ -475,9 +483,9 @@ def drawClues(app, canvas):
 def drawGameOver(app, canvas):
     canvas.create_rectangle(0, 0, app.height, app.width, fill = "black")
     canvas.create_text(app.width//2, app.height//4, text="YOU DIED",fill="red", font="Gothic 60 bold")
-    text = f'Total Score:{app.totalPoints}'
-    canvas.create_text(app.width//2, app.height//2, text=text, fill="red", font="Gothic 60 bold")
-    canvas.create_text(app.width//2, 3*app.height//4, text="Press r to reset", fill="red", font="Gothic 60 bold")
+    text = f'Total Score:{round(app.totalPoints)}'
+    canvas.create_text(app.width//2, app.height//2, text=text, fill="red", font="Gothic 40 bold")
+    canvas.create_text(app.width//2, 3*app.height//4, text="Press r to reset", fill="red", font="Gothic 40 bold")
 
 def drawToastMessage(app, canvas, item):
     if item == "key":    
@@ -494,6 +502,18 @@ def drawToastMessage(app, canvas, item):
         canvas.create_rectangle(0, 0, app.width, app.height//8, fill="red")
         canvas.create_text(app.width//2, app.height//16, text=text, fill="black", font="Gothic 25 bold" )
 
+def drawDoor(app, canvas):
+    (x0, y0, x1, y1) = getCellBounds(app, app.rows - 1, app.cols - 1)
+    canvas.create_rectangle(x0 + 20, y0+5, x1 - 20, y1-5, fill="brown")
+    canvas.create_rectangle(x0 + 25, y0+10, x1 - 25, (y0 + y1)//2 - 8, fill="sienna4")
+    canvas.create_oval(x1- 35, (y0 + y1)//2 - 5, x1 - 25,  (y0 + y1)//2 + 5, fill="gold")
+
+def drawWinScreen(app, canvas):
+    canvas.create_rectangle(0, 0, app.height, app.width, fill = "black")
+    canvas.create_text(app.width//2, app.height//4, text="YOU ESCAPED...FOR NOW",fill="red", font="Gothic 40 bold")
+    text = f'Total Score:{round(app.totalPoints)}'
+    canvas.create_text(app.width//2, app.height//2, text=text, fill="red", font="Gothic 40 bold")
+    canvas.create_text(app.width//2, 3*app.height//4, text="Press r to play again", fill="red", font="Gothic 40 bold")
 
 def drawFogOfWar(app, canvas):
     (pRow, pCol) = getCell(app, app.playerX, app.playerY)
@@ -525,6 +545,8 @@ def redrawAll(app, canvas):
     drawGhost(app, canvas)
     drawBonus(app, canvas)
     drawClues(app, canvas)
+    if app.gotKey:
+        drawDoor(app, canvas)
     #drawFogOfWar(app, canvas)
     if app.titleScreen:
         drawTitle(app, canvas)
@@ -532,6 +554,9 @@ def redrawAll(app, canvas):
         drawHelpScreen(app, canvas)
     if app.gameOver:
         drawGameOver(app, canvas)
+    if app.win:
+        print("drawing")
+        drawWinScreen(app, canvas)
     if app.keyToastShowing:
         drawToastMessage(app, canvas, "key")
     if app.bonusToastShowing:
