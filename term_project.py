@@ -50,6 +50,8 @@ def getCellBounds(app, row, col):
 def make2dList(rows, cols):
     return [ ([False] * cols) for row in range(rows) ]
 
+def distance(x1, y1, x2, y2):
+    return ((x1 - x2)**2 + (y1 - y2)**2)**0.5 
 ########################################################
 # Helper Functions
 ########################################################
@@ -218,6 +220,8 @@ def appStarted(app):
 
     app.titleScreen = True
     app.helpScreen = False
+    app.gameOver = False
+    app.totalPoints = 0
     app.t0 = 0
 
     app.bonus = ["crucifix", "battery", "snack"]
@@ -231,8 +235,19 @@ def appStarted(app):
     spawnKey(app)
     makeMaze(app, app.rows, app.cols)
 
+def isDead(app):
+    if distance(app.playerX, app.playerY, app.ghostX, app.ghostY) < 20:
+        return True 
+    return False 
+
 def timerFired(app):
-    moveGhost(app)
+    if not app.gameOver:
+        app.totalPoints += 0.5
+    if isDead(app):
+        app.gameOver = True 
+
+    if not app.titleScreen and not app.helpScreen:
+        moveGhost(app)
     app.t0 += 1
     if app.t0 > 20:
         app.titleScreen = False
@@ -421,6 +436,13 @@ def drawClues(app, canvas):
         canvas.create_oval(x0 +15, y0+15, x1-15, y1-15, fill="lime")
         canvas.create_text((x0 + x1) // 2, (y0 + y1)//2, text=clue, fill="black")
 
+def drawGameOver(app, canvas):
+    canvas.create_rectangle(0, 0, app.height, app.width, fill = "black")
+    canvas.create_text(app.width//2, app.height//4, text="YOU DIED",fill="red", font="Gothic 60 bold")
+    text = f'Total Score:{app.totalPoints}'
+    canvas.create_text(app.width//2, app.height//2, text=text, fill="red", font="Gothic 60 bold")
+    canvas.create_text(app.width//2, 3*app.height//4, text="Press r to reset", fill="red", font="Gothic 60 bold")
+
 def redrawAll(app, canvas):
     canvas.create_rectangle(0, 0, app.height, app.width, fill = "red")
     for row in range(app.rows):
@@ -445,6 +467,8 @@ def redrawAll(app, canvas):
         drawTitle(app, canvas)
     if app.helpScreen:
         drawHelpScreen(app, canvas)
+    if app.gameOver:
+        drawGameOver(app, canvas)
     if app.journalVisible:
         drawJournalScreen(app, canvas)
         drawTextBoxText(app, canvas)
