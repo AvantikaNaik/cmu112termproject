@@ -198,8 +198,8 @@ class Node():
         return hash((self.parent, self.position, self.distance, self.heuristic, self.cost))
 ########################################################
 # Database Stuff
-# I've used sqlite3 before so I have some experience but I used the link
-# below for just refreshing syntax and general concepts
+# I've used sqlite3 before so I have some experience with it and databases in general
+# but I used the link below for just refreshing syntax and general concepts
 # https://scs.hosted.panopto.com/Panopto/Pages/Viewer.aspx?id=1e68b000-e15c-4e52-af04-ac6800f82ae8
 ########################################################
 conn = sqlite3.connect("Phasmo112Scores.db")
@@ -212,21 +212,24 @@ cursor = conn.cursor()
 #score INTEGER
 #)''')
 
-def insertHighScore(score):
+# Only inserting into data base if you're signed in and you win (only called when win)
+def insertHighScore(app, score):
     if app.signIn:
-        cursor.execute('INSERT INTO userData VALUES (?,?,?)', (name, pword, score))
-    conn.commit()
+        cursor.execute('INSERT INTO userData VALUES (?,?,?)', (app.username, app.password, score))
+        conn.commit()
 
-def showAllScores():
+# If you're signed in, shows your top 3, else, shows top 3 overall
+def showAllScores(app):
     if app.freePlay:
-        pass
-        # find top 3 scores (not usernames)
+        sql = "SELECT username, score FROM (SELECT username, score, row_number() OVER(ORDER BY score DESC) rownum FROM userData) WHERE rownum <= 1"
+        freePlayInfo = cursor.execute(sql)
+        return freePlayInfo
+        # find top 3 scores and usernames)
     else:
         # show your top 3 scores
-        pass
-    data = cursor.execute('SELECT * FROM userData')
-    for row in data:
-        print(row)
+        sqlStatement = "SELECT username, score FROM userData WHERE username=? AND password=? ORDER BY score DESC LIMIT 1"
+        personalDataInfo = cursor.execute(sqlStatement ,(app.username, app.password))
+        return personalDataInfo
 ########################################################
 # App stuff
 ########################################################
@@ -301,6 +304,8 @@ def appStarted(app):
     app.nextLevelTimer = 15
 
     app.fogOn = True
+    app.notUsedKeyHack = True
+    app.notUsedDoorHack = True
 
     app.signIn = False
     app.freePlay = False
@@ -308,6 +313,8 @@ def appStarted(app):
     app.clickedSignIn = False
     app.clickedUserName = False
     app.clickedPassWord = False
+    app.usernameEntry = False
+    app.passwordEntry = False
     app.username = "Username"
     app.password = "Password"
 
@@ -320,10 +327,10 @@ def isDead(app):
         app.hasCrucifix = False
         app.usedCrucifix = True 
         if app.playerY > app.height//2:
-            ghostRow = random.randint(5, 9)
-        else: ghostRow = random.randint(1,5)
+            ghostRow = random.randint(0, 4)
+        else: ghostRow = random.randint(5,9)
         if app.playerX > app.width//2:
-            ghostCol = random.randint(1,5)
+            ghostCol = random.randint(0,5)
         else: ghostCol = random.randint(5,9)
         (x0, y0, x1, y1) = getCellBounds(app, ghostRow, ghostCol)
         app.ghostX = (x0+x1)//2
@@ -333,8 +340,7 @@ def isDead(app):
     # ghost, so that it's still possible to squeeze past it on a corner spot
     # if you are very skilled, otherwise it would be impossible for the 
     # player to win
-    if distance(app.playerX, app.playerY, app.ghostX, app.ghostY) < 32:
-        # 
+    elif app.hasCrucifix == False and distance(app.playerX, app.playerY, app.ghostX, app.ghostY) < 32:
         return True 
     return False 
 
@@ -520,13 +526,24 @@ def keyPressed(app, event):
     if app.titleScreen:
         return 
     if not app.journalVisible:
-        ghostMove(app)
-        if event.key == "f":
-            app.fogOn = not app.fogOn
-        if event.key == "r":
-            appStarted(app)
-        if event.key == "h":
-            app.helpScreen = not app.helpScreen
+        if not app.showingModeToast:
+            ghostMove(app)
+            if event.key == "f":
+                app.fogOn = not app.fogOn
+            if event.key == "k" and app.notUsedKeyHack: # k for key, TA hack
+                (kx0, ky0, kx1, ky1) =  getCellBounds(app, app.keyLocation[0], app.keyLocation[1])
+                app.playerX = (kx0 + kx1) //2 
+                app.playerY = (ky0 + ky1) //2 
+                app.notUsedKeyHack = False
+            if event.key == "l" and app.notUsedDoorHack: #l for leave, TA hack
+                (px0, py0, px1, py1) = getCellBounds(app, 9, 9)
+                app.playerX = (px0 + px1) //2 
+                app.playerY = (py0 + py1) //2 
+                app.notUsedDoorHack = False
+            if event.key == "r":
+                appStarted(app)
+            if event.key == "h":
+                app.helpScreen = not app.helpScreen
         app.playerSpeed = 5
         oldRow, oldCol = getCell(app, app.playerX, app.playerY)
         if event.key == "Up" or event.key == "w":
@@ -838,11 +855,19 @@ def drawDoor(app, canvas):
     canvas.create_oval(x1- 35, (y0 + y1)//2 - 5, x1 - 25,  (y0 + y1)//2 + 5, fill="gold")
 
 def drawWinScreen(app, canvas):
+    topScores = showAllScores(app)
     canvas.create_rectangle(0, 0, app.height, app.width, fill = "black")
-    canvas.create_text(app.width//2, app.height//4, text="YOU ESCAPED...FOR NOW",fill="red", font="Gothic 40 bold")
+    canvas.create_text(app.width//2, app.height//8, text="YOU ESCAPED...FOR NOW",fill="red", font="Gothic 25 bold")
     text = f'Total Score:{round(app.totalPoints)}'
-    canvas.create_text(app.width//2, app.height//2, text=text, fill="red", font="Gothic 40 bold")
-    canvas.create_text(app.width//2, 3*app.height//4, text=f"Next level in {round(app.nextLevelTimer)}", fill="red", font="Gothic 40 bold")
+    canvas.create_text(app.width//2, 3 * app.height//8 - 50, text=text, fill="red", font="Gothic 20 bold")
+    canvas.create_text(app.width//2, 3*app.height//8 + 50, text=f"Next round in {round(app.nextLevelTimer)}", fill="red", font="Gothic 20 bold")
+    i = 50 
+    for row in topScores:
+        text = f"Top Score: {row[1]} by {row[0]}"
+        canvas.create_text(app.width//2, app.height//2 + i, text=text, fill="red", font="Gothic 25 bold")
+        i += 50
+
+
 
 def drawFogOfWar(app, canvas):
     (pRow, pCol) = getCell(app, app.playerX, app.playerY)
@@ -903,8 +928,7 @@ def redrawAll(app, canvas):
         drawGameOver(app, canvas)
     if app.win:
         drawWinScreen(app, canvas)
-        insertHighScore(app.totalPoints)
-        showAllScores()
+        insertHighScore(app, app.totalPoints)
 
 runApp(width=800, height=800)
 
