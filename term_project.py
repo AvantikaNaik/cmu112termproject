@@ -11,6 +11,7 @@ from dataclasses import make_dataclass
 from random import shuffle, randrange
 import math
 
+
 #######################################################
 # 15-112 Functions
 #######################################################
@@ -216,10 +217,11 @@ def appStarted(app):
                         rightLine=True, row=row, col=col)
             app.gridBlocks[row][col] = newBlock
             
-    app.playerX = app.margin * 2
-    app.playerY = app.margin * 2
-    app.ghostX  = app.width - app.margin * 2
-    app.ghostY  = app.height - app.margin * 2
+    app.playerX = app.margin * 3
+    app.playerY = app.margin * 3
+    app.currentDirection = "L"
+    app.ghostX  = app.width - app.margin * 4
+    app.ghostY  = app.height - app.margin * 4
     app.targetX = app.width - 30
     app.targetY = app.height - 30
     app.pathVal = 0
@@ -461,18 +463,22 @@ def keyPressed(app, event):
         oldRow, oldCol = getCell(app, app.playerX, app.playerY)
         if event.key == "Up" or event.key == "w":
             app.playerY -= app.playerSpeed
+            app.currentDirection = "U"
             if not playerLegal(app, oldRow, oldCol):
                 app.playerY += app.playerSpeed
         elif event.key == "Down" or event.key == "s":
             app.playerY += app.playerSpeed
+            app.currentDirection = "D"
             if not playerLegal(app, oldRow, oldCol):
                 app.playerY -= app.playerSpeed
         elif event.key == "Left" or event.key == "a":
             app.playerX -= app.playerSpeed
+            app.currentDirection = "L"
             if not playerLegal(app, oldRow, oldCol):
                 app.playerX += app.playerSpeed
         elif event.key == "Right" or event.key == "d":
             app.playerX += app.playerSpeed
+            app.currentDirection = "R"
             if not playerLegal(app, oldRow, oldCol):
                 app.playerX -= app.playerSpeed
 
@@ -534,11 +540,27 @@ def drawKey(app, canvas):
     canvas.create_rectangle(midX, y0+10, midX + 22, y0 + 15, width=0, fill="gold")
     canvas.create_rectangle(midX, y0+25, midX + 15, y0 + 30, width=0, fill="gold")
 
-def drawPlayer(app, canvas):
-    canvas.create_oval(app.playerX - 10, app.playerY - 10, app.playerX + 10, app.playerY + 10, fill="blue")
+def drawPlayer(app, canvas, direction):
+    canvas.create_oval(app.playerX - 8, app.playerY - 32, app.playerX + 8, app.playerY - 16, fill="tan")
+    canvas.create_rectangle(app.playerX-12, app.playerY-16, app.playerX+12, app.playerY, fill="green")
+    canvas.create_rectangle(app.playerX-12, app.playerY, app.playerX+12, app.playerY+16, fill="blue")
+    canvas.create_line(app.playerX-8, app.playerY+16, app.playerX-10, app.playerY+32, width=4, fill="blue")
+    canvas.create_line(app.playerX+8, app.playerY+16, app.playerX+10, app.playerY+32, width=4, fill="blue")
+    canvas.create_oval(app.playerX - 5, app.playerY - 27, app.playerX -3,  app.playerY - 25, width=0, fill="green")
+    canvas.create_oval(app.playerX + 3, app.playerY - 27, app.playerX + 5,  app.playerY - 25, width=0, fill="green")
+    canvas.create_line(app.playerX - 3, app.playerY - 20, app.playerX + 3,  app.playerY - 20, width=1, fill="red")
+    if direction == "U":
+        canvas.create_rectangle(app.playerX-8, app.playerY-24, app.playerX + 9, app.playerY - 12, width=0, fill="goldenrod")
+        canvas.create_oval(app.playerX - 8, app.playerY - 32, app.playerX + 8, app.playerY - 16, width=0, fill="goldenrod")
+    canvas.create_text(app.playerX, app.playerY, text=direction, fill="white")
+
 
 def drawGhost(app, canvas):
-    canvas.create_oval(app.ghostX - 10, app.ghostY - 10, app.ghostX + 10, app.ghostY + 10, fill="red")
+    canvas.create_oval(app.ghostX - 20, app.ghostY - 20, app.ghostX + 20, app.ghostY + 20, fill="purple")
+    canvas.create_polygon(app.ghostX-20, app.ghostY, app.ghostX, app.ghostY+40, app.ghostX+20, app.ghostY, width=0, fill="purple")
+    canvas.create_oval(app.ghostX - 12, app.ghostY - 9, app.ghostX - 8, app.ghostY - 5, fill="black")
+    canvas.create_oval(app.ghostX + 8, app.ghostY - 9, app.ghostX + 12, app.ghostY - 5, fill="black")
+    canvas.create_oval(app.ghostX - 3, app.ghostY + 4, app.ghostX + 3, app.ghostY + 14, fill="black")
 
 def drawTitle(app, canvas):
     canvas.create_rectangle(0, 0, app.height, app.width, fill = "black")
@@ -722,7 +744,7 @@ def redrawAll(app, canvas):
             if block.bottomLine:
                 canvas.create_line(x0, y1, x1, y1, width = 3, fill="white")
     drawKey(app, canvas)
-    drawPlayer(app, canvas)
+    drawPlayer(app, canvas, app.currentDirection)
     drawGhost(app, canvas)
     drawBonus(app, canvas)
     drawClues(app, canvas)
