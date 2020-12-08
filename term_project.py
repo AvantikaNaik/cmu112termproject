@@ -284,7 +284,7 @@ def isDead(app):
         app.ghostX = (x0+x1)//2
         app.ghostY = (y0+y1)//2
         return False
-    if distance(app.playerX, app.playerY, app.ghostX, app.ghostY) < 20:
+    if distance(app.playerX, app.playerY, app.ghostX, app.ghostY) < 44:
         return True 
     return False 
 
@@ -344,11 +344,18 @@ def chooseClues(app):
 
 
 def playerLegal(app, oldRow, oldCol):
-    newRow, newCol = getCell(app, app.playerX, app.playerY)
-    if (app.playerX - 10 < app.margin or app.playerX + 10 > app.width - app.margin
-        or app.playerY - 10 < app.margin or app.playerY + 10 > app.height - app.margin):
+    if (app.playerX - 12 < app.margin or app.playerX + 12 > app.width - app.margin
+        or app.playerY - 32 < app.margin or app.playerY + 32 > app.height - app.margin):
         return False
-    elif not isLegal(app, oldRow, oldCol, newRow, newCol) :
+    if app.currentDirection == "R":
+        newRow, newCol = getCell(app, app.playerX + 12, app.playerY)
+    elif app.currentDirection == "L":
+        newRow, newCol = getCell(app, app.playerX - 12, app.playerY) 
+    elif app.currentDirection == "U":
+        newRow, newCol = getCell(app, app.playerX, app.playerY-32)
+    elif app.currentDirection == "D":
+        newRow, newCol = getCell(app, app.playerX - 12, app.playerY + 32)
+    if not isLegal(app, oldRow, oldCol, newRow, newCol) :
         return False
 
     return True
