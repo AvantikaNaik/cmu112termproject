@@ -2,7 +2,7 @@
 # Avantika Naik
 # Phasmophobia112
 # Started: Nov 19th 
-# Ended: Dec 9 2020
+# Ended:
 #######################################################
 from cmu_112_graphics import *
 import random
@@ -10,11 +10,7 @@ import time
 from dataclasses import make_dataclass
 from random import shuffle, randrange
 import math
-import sqlite3
 
-# Non-code citation: https://github.com/azsry/phasmophobia_mechanics
-# That's the phasmo github which has a rundown of all the game mechs
-# that I used as inspiration for my game
 
 #######################################################
 # 15-112 Functions
@@ -197,37 +193,6 @@ class Node():
     def __hash__(self):
         return hash((self.parent, self.position, self.distance, self.heuristic, self.cost))
 ########################################################
-# Database Stuff
-# I've used sqlite3 before so I have some experience but I used the link
-# below for just refreshing syntax and general concepts
-# https://scs.hosted.panopto.com/Panopto/Pages/Viewer.aspx?id=1e68b000-e15c-4e52-af04-ac6800f82ae8
-########################################################
-conn = sqlite3.connect("Phasmo112Scores.db")
-cursor = conn.cursor()
-
-#cursor.execute('''
-#CREATE TABLE userData(
-#username TEXT,
-#password TEXT,
-#score INTEGER
-#)''')
-
-def insertHighScore(score):
-    if app.signIn:
-        cursor.execute('INSERT INTO userData VALUES (?,?,?)', (name, pword, score))
-    conn.commit()
-
-def showAllScores():
-    if app.freePlay:
-        pass
-        # find top 3 scores (not usernames)
-    else:
-        # show your top 3 scores
-        pass
-    data = cursor.execute('SELECT * FROM userData')
-    for row in data:
-        print(row)
-########################################################
 # App stuff
 ########################################################
 
@@ -256,7 +221,7 @@ def appStarted(app):
     app.playerY = app.margin * 3
     app.currentDirection = "L"
     app.ghostX  = app.width - app.margin * 4
-    app.ghostY  = app.margin * 4
+    app.ghostY  = app.height - app.margin * 4
     app.targetX = app.width - 30
     app.targetY = app.height - 30
     app.pathVal = 0
@@ -300,16 +265,6 @@ def appStarted(app):
     app.crucifixToastShowing = False
     app.nextLevelTimer = 15
 
-    app.fogOn = True
-
-    app.signIn = False
-    app.freePlay = False
-    app.showingModeToast = False
-    app.clickedSignIn = False
-    app.clickedUserName = False
-    app.clickedPassWord = False
-    app.username = "Username"
-    app.password = "Password"
 
     app.keyLocation = (0, 0)
     spawnKey(app)
@@ -329,12 +284,7 @@ def isDead(app):
         app.ghostX = (x0+x1)//2
         app.ghostY = (y0+y1)//2
         return False
-    # Note that the number 32 is the smallest distance between you and the
-    # ghost, so that it's still possible to squeeze past it on a corner spot
-    # if you are very skilled, otherwise it would be impossible for the 
-    # player to win
-    if distance(app.playerX, app.playerY, app.ghostX, app.ghostY) < 32:
-        # 
+    if distance(app.playerX, app.playerY, app.ghostX, app.ghostY) < 44:
         return True 
     return False 
 
@@ -432,11 +382,6 @@ def isLegal(app, oldRow, oldCol, newRow, newCol):
         return True
     return False
 
-def checkForSignIn(app):
-    if app.clickedSignIn and app.clickedUserName and app.clickedPassWord:
-        app.signIn = True
-    
-
 ########################################################
 # timerFired, keyPressed, mousePressed
 ########################################################
@@ -444,7 +389,6 @@ def checkForSignIn(app):
 def timerFired(app):
     app.time += 1
     gotClue(app)
-    checkForSignIn(app)
     if app.foundFirstClue:
         app.clue1Timer += 1
         app.clue1ToastShowing = True
@@ -504,14 +448,11 @@ def timerFired(app):
             app.keyToastShowing = False
     if isDead(app):
         app.gameOver = True 
-    if not app.titleScreen and not app.helpScreen and (app.time % 5 == 0) and not app.showingModeToast:
+    if not app.titleScreen and not app.helpScreen and (app.time % 5 == 0) :
         moveGhost(app)
     app.t0 += 1
     if app.t0 > 15:
         app.titleScreen = False
-        app.showingModeToast = True
-    if app.freePlay or app.signIn:
-        app.showingModeToast = False
     if not app.gameOver and not app.win:
         app.totalPoints += 0.5
         ghostMove(app)
@@ -521,8 +462,6 @@ def keyPressed(app, event):
         return 
     if not app.journalVisible:
         ghostMove(app)
-        if event.key == "f":
-            app.fogOn = not app.fogOn
         if event.key == "r":
             appStarted(app)
         if event.key == "h":
@@ -549,44 +488,6 @@ def keyPressed(app, event):
             app.currentDirection = "R"
             if not playerLegal(app, oldRow, oldCol):
                 app.playerX -= app.playerSpeed
-
-    if app.showingModeToast:
-        if app.usernameEntry:
-            if app.username == "Username":
-                app.username = ""
-            if event.key == "Enter" or event.key == "Escape":
-                app.usernameEntry = False
-                app.clickedUserName = True
-            if event.key == "Backspace":
-                usernameLen = len(app.username)
-                if usernameLen != 0:
-                    app.username = app.username[:usernameLen - 1] 
-                else:
-                    app.username = ""
-            elif event.key == "Space":
-                app.username += " "
-            elif event.key in {"Up", "Down", "Left","Right"}:
-                app.username += "" 
-            elif event.key not in {"Backspace", "Enter", "Escape"}:
-                app.username += event.key    
-        elif app.passwordEntry:
-            if app.password == "Password":
-                app.password = ""
-            if event.key == "Enter" or event.key == "Escape":
-                app.passwordEntry = False
-                app.clickedPassWord = True
-            if event.key == "Backspace":
-                passwordLen = len(app.password)
-                if passwordLen != 0:
-                    app.password = app.password[:passwordLen - 1] 
-                else:
-                    app.password = ""
-            elif event.key == "Space":
-                app.password += " "
-            elif event.key in {"Up", "Down", "Left","Right"}:
-                app.password += "" 
-            elif event.key not in {"Backspace", "Enter", "Escape"}:
-                app.password += event.key    
 
     if event.key == "j" and not app.journalEntry:
         app.journalVisible = not app.journalVisible
@@ -619,16 +520,6 @@ def mousePressed(app, event):
                 app.currentText = i
                 app.journalEntry = True
             else: app.currentText
-    if app.showingModeToast:
-        if event.x < app.width//2:
-            app.freePlay = True
-        else: 
-            app.clickedSignIn = True
-            if app.height//3 < event.y < 2 * app.height//3:
-                app.usernameEntry = True
-            elif event.y > 2 * app.width//3:
-                app.passwordEntry = True
-
 
 ########################################################
 # Draw Functions
@@ -686,16 +577,6 @@ def drawTitle(app, canvas):
     canvas.create_text(app.width//2, 4 * app.height//5, text="Will you make it out alive?", fill="red", font="Gothic 40 bold")
     drawTitleGhost(app, canvas, 100, 400)
     drawTitleGhost(app, canvas, app.width - 100, 400)
-
-def drawModeToast(app, canvas):
-    canvas.create_rectangle(0,0, app.width//2, app.height, fill="red")
-    canvas.create_text(app.width//4, app.height//2, text="Click Here For Free Play Mode", fill="black")
-    canvas.create_rectangle(app.width//2, 0, app.width, app.height//3, fill="black")
-    canvas.create_text(3 * app.width//4, app.height//6, text="Click Here For Sign In Mode", fill="red")
-    canvas.create_rectangle(app.width//2, app.height//3, app.width, 2 * app.height//3, fill="red")
-    canvas.create_text(3 * app.width//4, 3 *app.height//6, text=app.username, fill="black")
-    canvas.create_rectangle(app.width//2, 2 * app.height//3, app.width, app.height, fill="black")
-    canvas.create_text(3 * app.width//4, 5 * app.height//6, text=app.password, fill="red")
 
 def drawTitleGhost(app, canvas, x, y):
     canvas.create_oval(x - 60, y - 60, x + 60, y + 60, fill="red")
@@ -876,8 +757,7 @@ def redrawAll(app, canvas):
     drawClues(app, canvas)
     if app.gotKey:
         drawDoor(app, canvas)
-    if app.fogOn:
-        drawFogOfWar(app, canvas)
+    #drawFogOfWar(app, canvas)
     if app.keyToastShowing:
         drawToastMessage(app, canvas, "key")
     if app.bonusToastShowing:
@@ -893,18 +773,14 @@ def redrawAll(app, canvas):
     if app.journalVisible:
         drawJournalScreen(app, canvas)
         drawTextBoxText(app, canvas)
-    if app.helpScreen:
-        drawHelpScreen(app, canvas)
     if app.titleScreen:
         drawTitle(app, canvas)
-    if app.showingModeToast:
-        drawModeToast(app, canvas)
+    if app.helpScreen:
+        drawHelpScreen(app, canvas)
     if app.gameOver:
         drawGameOver(app, canvas)
     if app.win:
         drawWinScreen(app, canvas)
-        insertHighScore(app.totalPoints)
-        showAllScores()
 
 runApp(width=800, height=800)
 
