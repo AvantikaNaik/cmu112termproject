@@ -31,8 +31,8 @@ def getCell(app, x, y):
     # Note: we have to use int() here and not just // because
     # row and col cannot be floats and if any of x, y, app.margin,
     # cellWidth or cellHeight are floats, // would still produce floats.
-    row = int((y - app.margin) / cellHeight)
-    col = int((x - app.margin) / cellWidth)
+    row = int((y - app.margin) // cellHeight)
+    col = int((x - app.margin) // cellWidth)
     return (row, col)
 
 
@@ -317,10 +317,29 @@ def appStarted(app):
     app.passwordEntry = False
     app.username = "Username"
     app.password = "Password"
+    app.currentlyOnUsername = False
+    app.currentlyOnPassword = False
 
     app.keyLocation = (0, 0)
     spawnKey(app)
+
+    app.vent1 = (-10, -10)
+    app.vent2 = (-10, -10)
+    app.vents =chooseVents(app)
+
     makeMaze(app, app.rows, app.cols)
+
+def chooseVents(app):
+    (row1, col1) = random.randint(0,4), random.randint(5,9)
+    (row2, col2) = random.randint(5,9), random.randint(0,4)
+    (bonusRow, bonusCol) = (app.bonusItem[1], app.bonusItem[2])
+    while (row1, col1) == app.keyLocation or (row1, col1) == (bonusRow, bonusCol):
+        (row1, col1) = random.randint(0,4), random.randint(5,9)
+    while (row2, col2) == app.keyLocation or (row2, col2) == (bonusRow, bonusCol):
+        (row2, col2) = random.randint(5,9), random.randint(0,4)
+    app.vent1 = (row1, col1)
+    app.vent2 = (row2, col2)
+    return (app.vent1, app.vent2)
 
 def isDead(app):
     if app.hasCrucifix and distance(app.playerX, app.playerY, app.ghostX, app.ghostY) < 20: 
@@ -528,7 +547,7 @@ def keyPressed(app, event):
     if not app.journalVisible:
         if not app.showingModeToast:
             ghostMove(app)
-            if event.key == "f":
+            if event.key == "f": # f for foggle (fog toggle)
                 app.fogOn = not app.fogOn
             if event.key == "k" and app.notUsedKeyHack: # k for key, TA hack
                 (kx0, ky0, kx1, ky1) =  getCellBounds(app, app.keyLocation[0], app.keyLocation[1])
@@ -540,6 +559,16 @@ def keyPressed(app, event):
                 app.playerX = (px0 + px1) //2 
                 app.playerY = (py0 + py1) //2 
                 app.notUsedDoorHack = False
+            if event.key == "v":
+                pRow, pCol = getCell(app, app.playerX, app.playerY)
+                if (pRow, pCol) == app.vent1:
+                    (x0, y0, x1, y1) = getCellBounds(app, app.vent2[0], app.vent2[1])
+                    app.playerX = (x0+x1)//2
+                    app.playerY = (y0+y1)//2
+                elif (pRow, pCol) == app.vent2:
+                    (x0, y0, x1, y1) = getCellBounds(app, app.vent1[0], app.vent1[1])
+                    app.playerX = (x0+x1)//2
+                    app.playerY = (y0+y1)//2
             if event.key == "r":
                 appStarted(app)
             if event.key == "h":
@@ -574,6 +603,7 @@ def keyPressed(app, event):
             if event.key == "Enter" or event.key == "Escape":
                 app.usernameEntry = False
                 app.clickedUserName = True
+                app.currentlyOnUsername = False
             if event.key == "Backspace":
                 usernameLen = len(app.username)
                 if usernameLen != 0:
@@ -592,6 +622,7 @@ def keyPressed(app, event):
             if event.key == "Enter" or event.key == "Escape":
                 app.passwordEntry = False
                 app.clickedPassWord = True
+                app.currentlyOnPassword = False
             if event.key == "Backspace":
                 passwordLen = len(app.password)
                 if passwordLen != 0:
@@ -643,8 +674,10 @@ def mousePressed(app, event):
             app.clickedSignIn = True
             if app.height//3 < event.y < 2 * app.height//3:
                 app.usernameEntry = True
+                app.currentlyOnUsername = True
             elif event.y > 2 * app.width//3:
                 app.passwordEntry = True
+                app.currentlyOnPassword = True
 
 
 ########################################################
@@ -709,9 +742,15 @@ def drawModeToast(app, canvas):
     canvas.create_text(app.width//4, app.height//2, text="Click Here For Free Play Mode", fill="black")
     canvas.create_rectangle(app.width//2, 0, app.width, app.height//3, fill="black")
     canvas.create_text(3 * app.width//4, app.height//6, text="Click Here For Sign In Mode", fill="red")
-    canvas.create_rectangle(app.width//2, app.height//3, app.width, 2 * app.height//3, fill="red")
+    if app.currentlyOnUsername == False:
+        fillUsername = "red" 
+    else: fillUsername = "pink"
+    canvas.create_rectangle(app.width//2, app.height//3, app.width, 2 * app.height//3, fill=fillUsername)
     canvas.create_text(3 * app.width//4, 3 *app.height//6, text=app.username, fill="black")
-    canvas.create_rectangle(app.width//2, 2 * app.height//3, app.width, app.height, fill="black")
+    if app.currentlyOnPassword == False:
+        fill="black"
+    else: fill = "gray"
+    canvas.create_rectangle(app.width//2, 2 * app.height//3, app.width, app.height, fill=fill)
     canvas.create_text(3 * app.width//4, 5 * app.height//6, text=app.password, fill="red")
 
 def drawTitleGhost(app, canvas, x, y):
@@ -867,7 +906,13 @@ def drawWinScreen(app, canvas):
         canvas.create_text(app.width//2, app.height//2 + i, text=text, fill="red", font="Gothic 25 bold")
         i += 50
 
-
+def drawVent(app, canvas, row, col):
+    (x0, y0, x1, y1) = getCellBounds(app, row, col)
+    y = (y0+y1)//2
+    canvas.create_rectangle(x0+10, y0+15, x1-10, y1-15, width=5, outline="gray")
+    canvas.create_line(x0+10, y, x1-10, y, width=4, fill="gray")
+    canvas.create_line(x0+10, y+10, x1-10, y+10, width=4, fill="gray")
+    canvas.create_line(x0+10, y-10, x1-10, y-10, width=4, fill="gray")
 
 def drawFogOfWar(app, canvas):
     (pRow, pCol) = getCell(app, app.playerX, app.playerY)
@@ -899,6 +944,8 @@ def redrawAll(app, canvas):
     drawGhost(app, canvas)
     drawBonus(app, canvas)
     drawClues(app, canvas)
+    for (row, col) in app.vents:
+        drawVent(app, canvas, row, col)
     if app.gotKey:
         drawDoor(app, canvas)
     if app.fogOn:
