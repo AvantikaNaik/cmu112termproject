@@ -263,6 +263,7 @@ def appStarted(app):
     app.targetX = app.width - 30
     app.targetY = app.height - 30
     app.pathVal = 0
+    app.path = []
 
     app.titleScreen = True
     app.helpScreen = False
@@ -436,13 +437,16 @@ def playerLegal(app, oldRow, oldCol):
     return True
 
 def ghostMove(app):
+    if len(app.path) >= 15:
+        ghostSpeed = 10
+    else: ghostSpeed = 4
     if distance(app.targetX, app.targetY, app.ghostX, app.ghostY) > 7:
         if app.targetX > app.ghostX:
-            app.ghostX += 5
-        else: app.ghostX -= 5
+            app.ghostX += ghostSpeed
+        else: app.ghostX -= ghostSpeed
         if app.targetY > app.ghostY:
-            app.ghostY += 5
-        else: app.ghostY -= 5
+            app.ghostY += ghostSpeed
+        else: app.ghostY -= ghostSpeed
         
 def isLegal(app, oldRow, oldCol, newRow, newCol):
     if newRow == oldRow and newCol == oldCol:
@@ -770,7 +774,7 @@ def drawHelpScreen(app, canvas):
     canvas.create_text(app.width//2, 4 * app.height//8, text="If it gets you, it's game over. Press r to reset if that happens.", fill="red", font="Gothic 15")
     canvas.create_text(app.width//2, 5 * app.height//8, text="While traversing the maze, you might come across clues.", fill="red", font="Gothic 15")
     canvas.create_text(app.width//2, 6 * app.height//8, text="Record the clues in your journal to get bonus points and powerups.", fill="red", font="Gothic 15")
-    canvas.create_text(app.width//2, 7 * app.height//8, text="If you shout for help, you might get a clue.", fill="red", font="Gothic 15")
+    canvas.create_text(app.width//2, 7 * app.height//8, text="Press v to vent.", fill="red", font="Gothic 15")
 
 def drawBonus(app, canvas):
     (item, row, col) = app.bonusItem
