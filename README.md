@@ -4,7 +4,7 @@ Phasmophobia112!
 Hi and Welcome to Phasmophobia112, Avantika Naik (avantikn)'s CMU 15-112
 term project. Here's everything you need to know to play! 
 
-How to Play:
+# How to Play:
 You're stuck in a maze and it's dark and you're trying to find your way out. As
 you traverse through the maze, you can come across different item:
 1. Clues - the possible clues you can find are: 
@@ -25,24 +25,24 @@ ghosty boy trying to chase you. Luckily, you can squeeze past him if you can tim
 it just right and get the angle right, but your best best is to be smart about 
 to traverse through the maze. 
 
-Keys: 
+# Keys: 
 WASD or Arrow keys to move, j for toggling journal screen (can't toggle if you're 
 typing in the journal text box), v to vent (when you're on a vent), h for help. 
 
 Good luck! 
 
-How to Run:
+# How to Run:
 Make sure you have the term_project.py file and the Phasmo112Scores.db in the 
 same directory. Once you have that, all you need to do is ctrl-b and run the 
 python file: term_project.py
 
-Libraries:
+# Libraries:
 None that need to be installed! I'm using sqlite3 but that comes with Python 
 thankfully. But the database Phasmo112Scores.db needs to be there! 
 
 You also need to have cmu-112 graphics in the same directory as the code! 
 
-Shortcut Commands:
+# Shortcut Commands:
 TA hax!
 While on the maze screen (these won't work on the title, mode, or journal screen) 
 1. Pressing f will toggle the fog so it's much easier to see 
@@ -51,7 +51,7 @@ While on the maze screen (these won't work on the title, mode, or journal screen
 3. Pressing h will toggle if you can see the help screen or not
 4. Pressing r will reset the game
 
-NOTES:
+# NOTES:
 The journal mechanisms are apparently a little untuitive accorsing to the people 
 who tested my game (aka my family). The way all the journal/text boxes work is 
 by clicking on the box (which is the tan rectangle journal screen or in the  
