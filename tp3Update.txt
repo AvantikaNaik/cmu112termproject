@@ -1,0 +1,10 @@
+Updates:
+
+The major updates are:
+
+I added in Among Us style vents, along with a database to keep track of high 
+scorers. You can either play free style, where you score won't be saved, or sign
+in and play, where your score will be saved. 
+
+I also cleaned up some graphics and minor bugs, but these changes were minor. 
+

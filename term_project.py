@@ -99,6 +99,8 @@ def spawnKey(app):
     app.keyLocation = (keyRow, keyCol)
 
 # https://mat.uab.cat/~alseda/MasterOpt/AStar-Algorithm.pdf
+# I kinda lost the link you gave me (Sorry!) so I found this one and used it 
+# to come up with the algo implementation for my code
 def astar(app, startval, endval):
     # Init start and end nodes, and lists
     start = Node(None, startval)
@@ -235,26 +237,27 @@ def showAllScores(app):
 ########################################################
 
 def appStarted(app):
+    # journal 
     app.journalVisible = False
     app.journalEntry = False
-
+    # journal text box
     app.text0=["Click to start typing...", app.width//2, app.height//4]
     app.text1= ["Click to start typing...", app.width//2, app.height//2]
     app.text2= ["Click to start typing...", app.width//2, 3 * app.height//4]
     app.journal = [app.text0, app.text1 ,app.text2]
     app.currentText = -1
-
+    # app row col
     app.rows = 10
     app.cols = 10
     app.margin = 20
-
+    # make grid
     app.gridBlocks = make2dList(app.rows, app.cols)
     for row in range(app.rows):
         for col in range(app.cols):
             newBlock = GridBlock(topLine=True, bottomLine=True, leftLine=True,\
                         rightLine=True, row=row, col=col)
             app.gridBlocks[row][col] = newBlock
-            
+    # player/ghost info 
     app.playerX = app.margin * 3
     app.playerY = app.margin * 3
     app.currentDirection = "L"
@@ -264,22 +267,21 @@ def appStarted(app):
     app.targetY = app.height - 30
     app.pathVal = 0
     app.path = []
-
+    #title screen info
     app.titleScreen = True
     app.helpScreen = False
     app.gameOver = False
     app.totalPoints = 0
     app.time = 0 
-
     app.t0 = 0
-
+    # key info
     app.gotKey= False
     app.keyToastShowing = False
     app.keyToastTimer = 0
-
+    # misc - light and win info
     app.lightDistance = 1
     app.win = False
-
+    # clue info
     app.clues = ["handprint", "ectoplasm", "freezing temps", "blood splatter",\
                 "writing", "water"]
     chooseClues(app)
@@ -293,7 +295,7 @@ def appStarted(app):
     app.clue2ToastShowing = False
     app.clue3Timer = 0
     app.clue3ToastShowing = False
-
+    # bonus info
     app.bonus = ["crucifix", "battery", "snack"]
     chooseBonus(app)
     app.bonusToastTimer = 0
@@ -303,11 +305,11 @@ def appStarted(app):
     app.crucifixTimer = 0
     app.crucifixToastShowing = False
     app.nextLevelTimer = 15
-
+    # Cheats
     app.fogOn = True
     app.notUsedKeyHack = True
     app.notUsedDoorHack = True
-
+    # Sign in info
     app.signIn = False
     app.freePlay = False
     app.showingModeToast = False
@@ -320,14 +322,14 @@ def appStarted(app):
     app.password = "Password"
     app.currentlyOnUsername = False
     app.currentlyOnPassword = False
-
+    # key spawn
     app.keyLocation = (0, 0)
     spawnKey(app)
-
+    # vent info
     app.vent1 = (-10, -10)
     app.vent2 = (-10, -10)
     app.vents =chooseVents(app)
-
+    #make maze
     makeMaze(app, app.rows, app.cols)
 
 def chooseVents(app):
@@ -343,6 +345,7 @@ def chooseVents(app):
     return (app.vent1, app.vent2)
 
 def isDead(app):
+    # Not dead if you have crucifix
     if app.hasCrucifix and distance(app.playerX, app.playerY, app.ghostX, app.ghostY) < 20: 
         app.hasCrucifix = False
         app.usedCrucifix = True 
@@ -405,6 +408,7 @@ def chooseBonus(app):
     item = app.bonus[bonusNum]
     bonusRow = random.randint(2, app.rows -1)
     bonusCol = random.randint(2, app.cols -1)
+    # Prevents overlap of bonus and clues
     for (clue, row, col) in app.currentClues:
         if bonusRow == row and bonusCol == col:
             bonusRow = random.randint(2, app.rows -1)
@@ -436,7 +440,9 @@ def playerLegal(app, oldRow, oldCol):
 
     return True
 
+# Actually moves the ghost
 def ghostMove(app):
+    # if ghost is farther than 15 blocks then it'll mover faster
     if len(app.path) >= 15:
         ghostSpeed = 10
     else: ghostSpeed = 4
@@ -447,7 +453,8 @@ def ghostMove(app):
         if app.targetY > app.ghostY:
             app.ghostY += ghostSpeed
         else: app.ghostY -= ghostSpeed
-        
+    
+# Makes sure that you're not out of bounds and not running through walls
 def isLegal(app, oldRow, oldCol, newRow, newCol):
     if newRow == oldRow and newCol == oldCol:
         return True
@@ -546,6 +553,7 @@ def timerFired(app):
         ghostMove(app)
 
 def keyPressed(app, event):
+    # Prevents you from doing anything on the title screen
     if app.titleScreen:
         return 
     if not app.journalVisible:
@@ -599,7 +607,7 @@ def keyPressed(app, event):
             app.currentDirection = "R"
             if not playerLegal(app, oldRow, oldCol):
                 app.playerX -= app.playerSpeed
-
+    # sign in text box mechs - sign in and password 
     if app.showingModeToast:
         if app.usernameEntry:
             if app.username == "Username":
@@ -616,7 +624,7 @@ def keyPressed(app, event):
                     app.username = ""
             elif event.key == "Space":
                 app.username += " "
-            elif event.key in {"Up", "Down", "Left","Right"}:
+            elif event.key in {"Up", "Down", "Left","Right","Tab"}:
                 app.username += "" 
             elif event.key not in {"Backspace", "Enter", "Escape"}:
                 app.username += event.key    
@@ -635,7 +643,7 @@ def keyPressed(app, event):
                     app.password = ""
             elif event.key == "Space":
                 app.password += " "
-            elif event.key in {"Up", "Down", "Left","Right"}:
+            elif event.key in {"Up", "Down", "Left","Right", "Tab"}:
                 app.password += "" 
             elif event.key not in {"Backspace", "Enter", "Escape"}:
                 app.password += event.key    
@@ -656,13 +664,14 @@ def keyPressed(app, event):
                 (app.journal[app.currentText])[0] = ""
         elif event.key == "Space":
             (app.journal[app.currentText])[0] += " "
-        elif event.key in {"Up", "Down", "Left","Right"}:
+        elif event.key in {"Up", "Down", "Left","Right", "Tab"}:
             (app.journal[app.currentText])[0] += "" 
         elif event.key not in {"Backspace", "Enter", "Escape"}:
             (app.journal[app.currentText])[0] += event.key
 
 
 def mousePressed(app, event):
+    # Journal mouse reactions
     if app.journalVisible:
         for i in range(len(app.journal)):
             (text, textX, textY) = app.journal[i]
@@ -671,6 +680,7 @@ def mousePressed(app, event):
                 app.currentText = i
                 app.journalEntry = True
             else: app.currentText
+    # Sign in mouse reactions
     if app.showingModeToast:
         if event.x < app.width//2:
             app.freePlay = True
@@ -743,21 +753,22 @@ def drawTitle(app, canvas):
 
 def drawModeToast(app, canvas):
     canvas.create_rectangle(0,0, app.width//2, app.height, fill="red")
-    canvas.create_text(app.width//4, app.height//2, text="Click Here For Free Play Mode", fill="black")
+    canvas.create_text(app.width//4, app.height//2, text="Click Here For Free Play Mode", fill="black", font="20")
     canvas.create_rectangle(app.width//2, 0, app.width, app.height//3, fill="black")
-    canvas.create_text(3 * app.width//4, app.height//6, text="Click Here For Sign In Mode", fill="red")
+    canvas.create_text(3 * app.width//4, app.height//6, text="Input Username and Password For Sign In Mode", fill="red", font="20")
     if app.currentlyOnUsername == False:
         fillUsername = "red" 
     else: fillUsername = "pink"
     canvas.create_rectangle(app.width//2, app.height//3, app.width, 2 * app.height//3, fill=fillUsername)
-    canvas.create_text(3 * app.width//4, 3 *app.height//6, text=app.username, fill="black")
+    canvas.create_text(3 * app.width//4, 3 *app.height//6, text=app.username, fill="black", font="20")
     if app.currentlyOnPassword == False:
         fill="black"
     else: fill = "gray"
     canvas.create_rectangle(app.width//2, 2 * app.height//3, app.width, app.height, fill=fill)
-    canvas.create_text(3 * app.width//4, 5 * app.height//6, text=app.password, fill="red")
+    canvas.create_text(3 * app.width//4, 5 * app.height//6, text=app.password, fill="red", font="20")
 
 def drawTitleGhost(app, canvas, x, y):
+    # Draws a largish ghost at a given point
     canvas.create_oval(x - 60, y - 60, x + 60, y + 60, fill="red")
     canvas.create_rectangle(x - 60, y, x + 60, y + 100, fill="red", width=0)
     canvas.create_polygon(x-20, y + 100, x, y + 140, x + 20, y + 100, fill="red", width=0 )
@@ -805,6 +816,7 @@ def drawSnack(app, canvas, x0, y0, x1, y1):
 def drawClues(app, canvas):
     for (clue, row, col) in [app.firstClue, app.secondClue, app.thirdClue]:
         (x0, y0, x1, y1) = getCellBounds(app, row, col)
+        # Casing on the clue to call different helper functions
         if clue == "water":
             drawWater(app, canvas,x0, y0, x1, y1)
         elif clue == "blood splatter":
@@ -875,6 +887,7 @@ def drawGameOver(app, canvas):
     canvas.create_text(app.width//2, 3*app.height//4, text="Press r to reset", fill="red", font="Gothic 40 bold")
 
 def drawToastMessage(app, canvas, item):
+    # Casing on item to write toast so this one function can be used multiple times
     if item == "key":    
         text = f'{item} found. Now you can escape'
     elif item == "used":
